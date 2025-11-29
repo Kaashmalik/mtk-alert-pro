@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@mtk/ui";
 import { RevenueMetrics } from "../dashboard/revenue-metrics";
-import { motion } from "framer-motion";
 
 export function RevenueDashboard() {
   const [revenue, setRevenue] = useState<any>(null);

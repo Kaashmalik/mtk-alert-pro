@@ -42,7 +42,6 @@ const DLS_RESOURCE_TABLE: Record<number, Record<number, number>> = {
  * Interpolate DLS resources for overs not in the table
  */
 function interpolateResources(oversRemaining: number, wicketsLost: number): number {
-  const overs = Math.floor(oversRemaining);
   const lowerOver = Math.floor(oversRemaining / 5) * 5;
   const upperOver = Math.ceil(oversRemaining / 5) * 5;
 

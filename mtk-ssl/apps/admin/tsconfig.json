@@ -1,13 +1,22 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "plugins": [{ "name": "next" }],
+    "baseUrl": ".",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
       "@/*": ["./src/*"],
+      "@mtk/config": ["../../packages/config/index.ts"],
       "@mtk/config/*": ["../../packages/config/src/*"],
+      "@mtk/ui": ["../../packages/ui/src/index.ts"],
       "@mtk/ui/*": ["../../packages/ui/src/*"],
+      "@mtk/database": ["../../packages/database/src/index.ts"],
       "@mtk/database/*": ["../../packages/database/src/*"]
-    }
+    },
+    "noEmit": true
   },
   "include": [
     "next-env.d.ts",
@@ -15,6 +24,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
-

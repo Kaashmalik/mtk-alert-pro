@@ -1,5 +1,5 @@
 import type { Config } from "tailwindcss";
-import { tailwindConfig as baseConfig } from "@mtk/config/src/tailwind";
+import { tailwindConfig as baseConfig } from "../../packages/config/src/tailwind";
 
 const config: Config = {
   ...baseConfig,
@@ -9,6 +9,7 @@ const config: Config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     "../../packages/ui/src/**/*.{js,ts,jsx,tsx}",
   ],
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   plugins: [require("tailwindcss-animate")],
 };
 

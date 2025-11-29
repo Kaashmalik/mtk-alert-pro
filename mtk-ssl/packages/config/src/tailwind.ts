@@ -5,7 +5,7 @@ import type { Config } from "tailwindcss";
  * Uses Tailwind v4 with modern features
  */
 export const tailwindConfig: Config = {
-  darkMode: ["class"],
+  darkMode: "class",
   content: [
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",

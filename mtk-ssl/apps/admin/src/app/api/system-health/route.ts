@@ -43,15 +43,15 @@ export async function GET(request: NextRequest) {
 
     // Calculate overall uptime (simplified)
     const services = health || [];
-    const overallStatus = services.every((s) => s.status === "healthy")
+    const overallStatus = services.every((s: any) => s.status === "healthy")
       ? "healthy"
-      : services.some((s) => s.status === "down")
+      : services.some((s: any) => s.status === "down")
       ? "down"
       : "degraded";
 
     return NextResponse.json({
       status: overallStatus,
-      services: services.reduce((acc, s) => {
+      services: services.reduce((acc: Record<string, any>, s: any) => {
         acc[s.service] = s;
         return acc;
       }, {} as Record<string, any>),

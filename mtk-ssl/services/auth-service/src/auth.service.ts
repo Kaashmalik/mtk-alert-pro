@@ -1,20 +1,20 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { RbacService } from './rbac/rbac.service';
 
-interface ValidateTokenRequest {
+export interface ValidateTokenRequest {
   token: string;
   tenantId?: string;
 }
 
-interface User {
+export interface User {
   id: string;
   email: string;
   tenantIds: string[];
   roles: string[];
 }
 
-interface ValidateTokenResponse {
+export interface ValidateTokenResponse {
   valid: boolean;
   user?: User;
   error?: string;
@@ -30,10 +30,10 @@ export class AuthService {
   async validateToken(request: ValidateTokenRequest): Promise<ValidateTokenResponse> {
     try {
       // Verify with Clerk
-      const clerkSecretKey = this.configService.get<string>('CLERK_SECRET_KEY');
+      const _clerkSecretKey = this.configService.get<string>('CLERK_SECRET_KEY');
       
       // In production, use Clerk SDK to verify
-      // const clerk = new Clerk({ secretKey: clerkSecretKey });
+      // const clerk = new Clerk({ secretKey: _clerkSecretKey });
       // const session = await clerk.sessions.verifySession(request.token);
       
       // Mock validation for development
@@ -51,7 +51,7 @@ export class AuthService {
 
       return { valid: true, user };
     } catch (error) {
-      return { valid: false, error: error.message };
+      return { valid: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 

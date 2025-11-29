@@ -1,28 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod, MessagePattern, Payload } from '@nestjs/microservices';
-import { TournamentService } from './tournament.service';
-
-interface CreateTournamentDto {
-  name: string;
-  tenantId: string;
-  format: 'knockout' | 'league' | 'hybrid' | 'round_robin';
-  startDate: string;
-  endDate: string;
-  maxTeams?: number;
-  description?: string;
-}
-
-interface Tournament {
-  id: string;
-  name: string;
-  tenantId: string;
-  format: string;
-  status: string;
-  startDate: string;
-  endDate: string;
-  maxTeams: number;
-  createdAt: string;
-}
+import { TournamentService, CreateTournamentDto, Tournament } from './tournament.service';
 
 @Controller()
 export class TournamentController {

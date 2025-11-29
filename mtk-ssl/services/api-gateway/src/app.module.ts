@@ -1,5 +1,5 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { HealthModule } from './health/health.module';
@@ -16,30 +16,25 @@ import { RedisModule } from './redis/redis.module';
       envFilePath: ['.env.local', '.env'],
     }),
 
-    // Rate limiting with Redis
-    ThrottlerModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        throttlers: [
-          {
-            name: 'short',
-            ttl: 1000,
-            limit: 10,
-          },
-          {
-            name: 'medium',
-            ttl: 10000,
-            limit: 50,
-          },
-          {
-            name: 'long',
-            ttl: 60000,
-            limit: 200,
-          },
-        ],
-        storage: config.get('REDIS_URL') ? 'redis' : 'memory',
-      }),
+    // Rate limiting
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          name: 'short',
+          ttl: 1000,
+          limit: 10,
+        },
+        {
+          name: 'medium',
+          ttl: 10000,
+          limit: 50,
+        },
+        {
+          name: 'long',
+          ttl: 60000,
+          limit: 200,
+        },
+      ],
     }),
 
     // Modules

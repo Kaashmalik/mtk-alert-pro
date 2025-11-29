@@ -189,9 +189,9 @@ export async function POST(request: NextRequest) {
  * Check DNS record (simplified - in production use dns.promises.resolveTxt or similar)
  */
 async function checkDnsRecord(
-  domain: string,
-  type: string,
-  expectedValue: string
+  _domain: string,
+  _type: string,
+  _expectedValue: string
 ): Promise<boolean> {
   // In production, use a proper DNS lookup library
   // For now, return false to indicate verification is pending

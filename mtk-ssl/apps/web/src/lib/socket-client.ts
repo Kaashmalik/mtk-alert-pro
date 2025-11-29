@@ -1,10 +1,11 @@
 "use client";
 
-import { io, Socket } from "socket.io-client";
+import { io } from "socket.io-client";
 
-let socket: Socket | null = null;
+type SocketClient = ReturnType<typeof io>;
+let socket: SocketClient | null = null;
 
-export function getSocket(matchId: string): Socket {
+export function getSocket(matchId: string): SocketClient {
   if (socket && socket.connected) {
     return socket;
   }
@@ -13,7 +14,6 @@ export function getSocket(matchId: string): Socket {
   
   socket = io(apiUrl, {
     path: "/socket.io",
-    transports: ["websocket", "polling"],
     reconnection: true,
     reconnectionDelay: 1000,
     reconnectionAttempts: 5,
@@ -28,7 +28,7 @@ export function getSocket(matchId: string): Socket {
     console.log("Socket disconnected");
   });
 
-  socket.on("error", (error) => {
+  socket.on("error", (error: Error) => {
     console.error("Socket error:", error);
   });
 
@@ -42,18 +42,18 @@ export function disconnectSocket() {
   }
 }
 
-export function emitBall(matchId: string, ballData: any) {
+export function emitBall(matchId: string, ballData: Record<string, unknown>) {
   const s = getSocket(matchId);
   s.emit("ball-added", { matchId, ballData });
 }
 
-export function onBallAdded(callback: (ballData: any) => void) {
+export function onBallAdded(callback: (ballData: unknown) => void) {
   if (socket) {
     socket.on("ball-added", callback);
   }
 }
 
-export function offBallAdded(callback: (ballData: any) => void) {
+export function offBallAdded(callback: (ballData: unknown) => void) {
   if (socket) {
     socket.off("ball-added", callback);
   }

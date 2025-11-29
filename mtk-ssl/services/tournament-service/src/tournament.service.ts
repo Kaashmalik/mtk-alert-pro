@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { ConfigService } from '@nestjs/config';
 import { KafkaService } from './kafka/kafka.service';
 
-interface CreateTournamentDto {
+export interface CreateTournamentDto {
   name: string;
   tenantId: string;
   format: 'knockout' | 'league' | 'hybrid' | 'round_robin';
@@ -12,7 +12,7 @@ interface CreateTournamentDto {
   description?: string;
 }
 
-interface Tournament {
+export interface Tournament {
   id: string;
   name: string;
   tenantId: string;

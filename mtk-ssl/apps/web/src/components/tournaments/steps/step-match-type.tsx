@@ -3,7 +3,7 @@
 import { UseFormReturn } from "react-hook-form"
 import { motion } from "framer-motion"
 import { Card, CardContent, Input, Label } from "@mtk/ui"
-import { Cricket, Clock, Zap } from "lucide-react"
+import { Circle, Clock, Zap } from "lucide-react"
 import { TournamentFormData } from "../tournament-wizard"
 import { useLanguage } from "@/hooks/use-language"
 
@@ -21,7 +21,7 @@ const matchTypes = [
   },
   {
     value: "odi" as const,
-    icon: Cricket,
+    icon: Circle,
     title: "ODI",
     description: "50 overs per side",
     color: "from-blue-500 to-indigo-500",

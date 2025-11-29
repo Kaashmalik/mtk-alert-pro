@@ -1,8 +1,8 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
-import { AuthService } from './auth.service';
+import { AuthService, ValidateTokenResponse } from './auth.service';
 
-interface ValidateTokenRequest {
+interface GrpcValidateTokenRequest {
   token: string;
   tenant_id?: string;
 }
@@ -19,7 +19,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @GrpcMethod('AuthService', 'ValidateToken')
-  async validateToken(request: ValidateTokenRequest) {
+  async validateToken(request: GrpcValidateTokenRequest): Promise<ValidateTokenResponse> {
     return this.authService.validateToken({
       token: request.token,
       tenantId: request.tenant_id,

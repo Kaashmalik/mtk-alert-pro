@@ -13,7 +13,7 @@ export const userRoleEnum = pgEnum("user_role", ["user", "admin", "super_admin"]
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().default(sql`uuid_generate_v7()`),
   email: text("email").notNull().unique(),
-  tenantIds: sql<uuid[]>`uuid[]`.notNull().default(sql`ARRAY[]::uuid[]`), // Array of tenant IDs
+  tenantIds: uuid("tenant_ids").array().notNull().default([]), // Array of tenant IDs
   role: userRoleEnum("role").notNull().default("user"),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

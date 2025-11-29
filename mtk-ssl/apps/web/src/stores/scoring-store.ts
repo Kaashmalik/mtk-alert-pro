@@ -16,6 +16,8 @@ export interface BallData {
   isNoBall: boolean;
   isBye: boolean;
   isLegBye: boolean;
+  isFour?: boolean;
+  isSix?: boolean;
   batsmanId?: string;
   bowlerId?: string;
   shotDirection?: string;
@@ -60,23 +62,6 @@ export interface ScoringState {
   resetInnings: (innings: 1 | 2 | "super_over") => void;
   setMatchId: (matchId: string) => void;
 }
-
-const createInitialInnings = (teamId: string, inningsId: string): InningsState => ({
-  inningsId,
-  teamId,
-  totalRuns: 0,
-  totalWickets: 0,
-  totalBalls: 0,
-  extras: 0,
-  byes: 0,
-  legByes: 0,
-  wides: 0,
-  noBalls: 0,
-  status: "not_started",
-  currentOver: 0,
-  currentBall: 0,
-  balls: [],
-});
 
 const calculateRuns = (input: BallInput): number => {
   if (typeof input === "number") return input;

@@ -18,7 +18,7 @@ import { Undo2, Redo2, Wifi, WifiOff, Zap } from "lucide-react";
 import { useOfflineSync } from "@/hooks/use-offline-sync";
 import { getSocket, disconnectSocket, onBallAdded, offBallAdded } from "@/lib/socket-client";
 import { savePendingBall } from "@/lib/offline-sync";
-import { useMatch, useMatchTeams } from "@/hooks/use-match-data";
+import { useMatch } from "@/hooks/use-match-data";
 
 const queryClient = new QueryClient();
 
@@ -27,13 +27,13 @@ function ScoringInterface() {
   const matchId = params.matchId as string;
   
   const [activeTab, setActiveTab] = useState<"scorecard" | "charts">("scorecard");
-  const [showDLS, setShowDLS] = useState(false);
 
   const {
     setMatchId,
-    currentInnings,
+    currentInnings: currentInningsNum,
     innings1,
     innings2,
+    superOver,
     isOnline,
     undo,
     redo,
@@ -41,64 +41,69 @@ function ScoringInterface() {
     resetInnings,
   } = useScoringStore();
 
+  // Get the actual innings data object
+  const currentInningsData = 
+    currentInningsNum === 1 ? innings1 : 
+    currentInningsNum === 2 ? innings2 : 
+    superOver;
+
   const [selectedBatsman, setSelectedBatsman] = useState<string>();
-  const [selectedBatsman2, setSelectedBatsman2] = useState<string>();
+  const [selectedBatsman2] = useState<string>();
   const [selectedBowler, setSelectedBowler] = useState<string>();
 
   const { data: match } = useMatch(matchId);
-  const { data: teams } = useMatchTeams(matchId);
 
   const currentTeamId = 
-    currentInnings === 1 ? match?.teamAId : 
-    currentInnings === 2 ? match?.teamBId : 
+    currentInningsNum === 1 ? match?.teamAId : 
+    currentInningsNum === 2 ? match?.teamBId : 
     null;
 
   useOfflineSync();
 
   useEffect(() => {
-    if (matchId) {
-      setMatchId(matchId);
-      
-      // Initialize innings if not set
-      const state = useScoringStore.getState();
-      if (!state.innings1) {
-        useScoringStore.setState({
-          innings1: {
-            inningsId: `innings-1-${matchId}`,
-            teamId: "", // Should be fetched from match data
-            totalRuns: 0,
-            totalWickets: 0,
-            totalBalls: 0,
-            extras: 0,
-            byes: 0,
-            legByes: 0,
-            wides: 0,
-            noBalls: 0,
-            status: "not_started",
-            currentOver: 0,
-            currentBall: 0,
-            balls: [],
-          },
-        });
-      }
-
-      // Connect to socket for real-time sync
-      if (isOnline) {
-        const socket = getSocket(matchId);
-        
-        const handleBallAdded = (data: any) => {
-          // Handle incoming ball from other scorers
-          console.log("Ball added by another scorer:", data);
-        };
-
-        onBallAdded(handleBallAdded);
-
-        return () => {
-          offBallAdded(handleBallAdded);
-          disconnectSocket();
-        };
-      }
+    if (!matchId) return;
+    
+    setMatchId(matchId);
+    
+    // Initialize innings if not set
+    const state = useScoringStore.getState();
+    if (!state.innings1) {
+      useScoringStore.setState({
+        innings1: {
+          inningsId: `innings-1-${matchId}`,
+          teamId: "", // Should be fetched from match data
+          totalRuns: 0,
+          totalWickets: 0,
+          totalBalls: 0,
+          extras: 0,
+          byes: 0,
+          legByes: 0,
+          wides: 0,
+          noBalls: 0,
+          status: "not_started",
+          currentOver: 0,
+          currentBall: 0,
+          balls: [],
+        },
+      });
     }
+
+    // Connect to socket for real-time sync
+    if (!isOnline) return;
+    
+    getSocket(matchId);
+    
+    const handleBallAdded = (data: unknown) => {
+      // Handle incoming ball from other scorers
+      console.log("Ball added by another scorer:", data);
+    };
+
+    onBallAdded(handleBallAdded);
+
+    return () => {
+      offBallAdded(handleBallAdded);
+      disconnectSocket();
+    };
   }, [matchId, isOnline, setMatchId]);
 
   const handleBallAdded = async () => {
@@ -122,7 +127,7 @@ function ScoringInterface() {
     }
   };
 
-  const targetRuns = innings1 && currentInnings === 2 ? innings1.totalRuns + 1 : undefined;
+  const targetRuns = innings1 && currentInningsNum === 2 ? innings1.totalRuns + 1 : undefined;
   const totalOvers = 20; // Should come from match settings
 
   return (
@@ -165,20 +170,20 @@ function ScoringInterface() {
             <Redo2 className="h-4 w-4 mr-1" />
             Redo
           </Button>
-          {currentInnings === 2 && targetRuns && (
+          {currentInningsNum === 2 && targetRuns && (
             <DLSCalculator
               targetRuns={targetRuns}
-              oversCompleted={currentInnings ? Math.floor(currentInnings.totalBalls / 6) : 0}
+              oversCompleted={currentInningsData ? Math.floor(currentInningsData.totalBalls / 6) : 0}
               totalOvers={totalOvers}
-              wicketsLost={currentInnings?.totalWickets || 0}
-              runsScored={currentInnings?.totalRuns || 0}
+              wicketsLost={currentInningsData?.totalWickets || 0}
+              runsScored={currentInningsData?.totalRuns || 0}
               onApply={(revisedTarget) => {
                 // Handle DLS target application
                 console.log("DLS target applied:", revisedTarget);
               }}
             />
           )}
-          {currentInnings === "super_over" && (
+          {currentInningsNum === "super_over" && (
             <Button
               onClick={() => resetInnings("super_over")}
               variant="outline"
@@ -267,9 +272,9 @@ function ScoringInterface() {
             <h2 className="text-lg font-semibold mb-4">Voice Input</h2>
             <VoiceInput
               onCommand={(input) => {
-                if (currentInnings) {
-                  const overNumber = currentInnings.currentOver;
-                  const ballNumber = currentInnings.currentBall === 0 ? 1 : currentInnings.currentBall;
+                if (currentInningsData) {
+                  const overNumber = currentInningsData.currentOver;
+                  const ballNumber = currentInningsData.currentBall === 0 ? 1 : currentInningsData.currentBall;
                   addBall({
                     overNumber,
                     ballNumber,
@@ -300,13 +305,13 @@ function ScoringInterface() {
           </Card>
 
           {/* Current Over */}
-          {currentInnings && (
+          {currentInningsData && (
             <Card className="p-4 sm:p-6">
               <h3 className="text-lg font-semibold mb-4">Current Over</h3>
               <div className="flex gap-2 flex-wrap">
-                {currentInnings.balls
-                  .filter((b) => b.overNumber === currentInnings.currentOver)
-                  .map((ball, idx) => (
+                {currentInningsData.balls
+                  .filter((b) => b.overNumber === currentInningsData.currentOver)
+                  .map((ball) => (
                     <div
                       key={ball.id}
                       className={`px-3 py-2 rounded-md text-sm font-medium ${

@@ -54,7 +54,7 @@ export function BallInputComponent({ batsmanId, bowlerId, onBallAdded }: BallInp
       overNumber,
       ballNumber,
       input,
-      runs,
+      runs: runs ?? (typeof input === "number" ? input : input === "WD" || input === "NB" ? 1 : 0),
       isWicket: input === "W" || !!wicketType,
       wicketType,
       isWide: input === "WD",

@@ -52,7 +52,7 @@ export class AuthMiddleware implements NestMiddleware {
       req.headers['x-user-roles'] = user.roles.join(',');
       
       next();
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid or expired token');
     }
   }
@@ -87,10 +87,10 @@ export class AuthMiddleware implements NestMiddleware {
     const payload = this.decodeJwt(token);
     
     return {
-      id: payload.sub,
-      email: payload.email,
-      tenantId: tenantId || payload.tenantId || 'default',
-      roles: payload.roles || ['user'],
+      id: String(payload.sub || ''),
+      email: String(payload.email || ''),
+      tenantId: tenantId || String(payload.tenantId || 'default'),
+      roles: Array.isArray(payload.roles) ? payload.roles as string[] : ['user'],
     };
   }
 

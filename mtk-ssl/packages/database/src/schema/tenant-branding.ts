@@ -1,5 +1,4 @@
 import { pgTable, uuid, text, timestamp, boolean } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
 import { tenants } from "./tenants";
 
 /**

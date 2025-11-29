@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@mtk/ui";
 import { RevenueMetrics } from "./revenue-metrics";
 import { LeaguesList } from "./leagues-list";
 import { SystemStatus } from "./system-status";

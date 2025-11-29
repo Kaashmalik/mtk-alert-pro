@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { Button } from "@mtk/ui";
 import { Card } from "@mtk/ui";
-import { Select } from "@mtk/ui";
-import { Player, useMatchPlayers } from "@/hooks/use-match-data";
+import { useMatchPlayers } from "@/hooks/use-match-data";
 import { Users, X } from "lucide-react";
 
 interface PlayerSelectorProps {
@@ -26,7 +25,7 @@ export function PlayerSelector({
   selectedBowler,
   selectedBatsman2,
 }: PlayerSelectorProps) {
-  const { data: playersData, isLoading } = useMatchPlayers(matchId);
+  const { data: playersData } = useMatchPlayers(matchId);
   const [showSelector, setShowSelector] = useState(false);
   const [selectingFor, setSelectingFor] = useState<"batsman" | "batsman2" | "bowler" | null>(null);
 

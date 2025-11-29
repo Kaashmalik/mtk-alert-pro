@@ -16,7 +16,6 @@ export function LiveScorecard({ targetRuns, totalOvers = 20 }: LiveScorecardProp
     state.superOver
   );
   const innings1 = useScoringStore((state) => state.innings1);
-  const innings2 = useScoringStore((state) => state.innings2);
 
   const stats = useMemo(() => {
     if (!currentInnings) return null;

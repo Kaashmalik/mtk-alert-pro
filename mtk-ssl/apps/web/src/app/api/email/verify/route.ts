@@ -3,7 +3,6 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@mtk/database";
 import { tenants, emailDomainVerifications } from "@mtk/database";
 import { eq, and } from "drizzle-orm";
-import { randomBytes } from "crypto";
 
 /**
  * GET - Check email domain verification status
@@ -190,8 +189,8 @@ export async function POST(request: NextRequest) {
  * Check email DNS records (simplified)
  */
 async function checkEmailDnsRecords(
-  domain: string,
-  verification: any
+  _domain: string,
+  _verification: Record<string, unknown>
 ): Promise<boolean> {
   // In production, check actual DNS records for SPF, DKIM, DMARC
   // For now, return false

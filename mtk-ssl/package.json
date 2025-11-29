@@ -15,13 +15,14 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
-    "clean": "turbo run clean && rm -rf node_modules",
+    "clean": "turbo run clean && rimraf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\""
   },
   "devDependencies": {
     "@turbo/gen": "^2.0.0",
     "prettier": "^3.2.5",
+    "rimraf": "^6.1.2",
     "turbo": "^2.0.0",
     "typescript": "^5.3.3"
   },
@@ -29,6 +30,10 @@
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
   },
-  "packageManager": "pnpm@8.15.0"
+  "packageManager": "pnpm@8.15.0",
+  "pnpm": {
+    "overrides": {
+      "drizzle-orm": "0.29.3"
+    }
+  }
 }
-

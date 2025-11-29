@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { getSupabaseServer, isSuperAdmin } from "@/lib/supabase-server";
 
+interface Subscription {
+  monthly_amount: string | null;
+  plan: string | null;
+  status: string;
+  canceled_at: string | null;
+}
+
+interface Payment {
+  amount: string | null;
+  status: string;
+  paid_at: string;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
@@ -21,21 +34,25 @@ export async function GET(request: NextRequest) {
     const period = searchParams.get("period") || "month"; // month, quarter, year
 
     // Get all active subscriptions
-    const { data: subscriptions, error: subError } = await supabase
+    const { data: subscriptionsData, error: subError } = await supabase
       .from("subscriptions")
       .select("*")
       .eq("status", "active");
 
     if (subError) throw subError;
 
+    const subscriptions = subscriptionsData as unknown as Subscription[];
+
     // Get all payments
-    const { data: payments, error: payError } = await supabase
+    const { data: paymentsData, error: payError } = await supabase
       .from("payments")
       .select("*")
       .eq("status", "completed")
       .order("paid_at", { ascending: false });
 
     if (payError) throw payError;
+
+    const payments = paymentsData as unknown as Payment[];
 
     // Calculate MRR (Monthly Recurring Revenue)
     const mrr = subscriptions.reduce((sum, sub) => {
@@ -72,7 +89,7 @@ export async function GET(request: NextRequest) {
       : 0;
 
     // Revenue by plan
-    const revenueByPlan = subscriptions.reduce((acc, sub) => {
+    const revenueByPlan = (subscriptions || []).reduce((acc: Record<string, number>, sub: Subscription) => {
       const plan = sub.plan || "free";
       acc[plan] = (acc[plan] || 0) + parseFloat(sub.monthly_amount || "0");
       return acc;

@@ -9,6 +9,28 @@ interface VoiceInputState {
   error: string | null;
 }
 
+// Add simple type definitions for SpeechRecognition
+interface SpeechRecognitionEvent {
+  results: {
+    [index: number]: {
+      transcript: string;
+    }[];
+    length: number;
+  };
+}
+
+interface SpeechRecognition {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: () => void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: any) => void;
+  onend: () => void;
+  start: () => void;
+  stop: () => void;
+}
+
 const VOICE_COMMANDS: Record<string, BallInput> = {
   zero: 0,
   "0": 0,

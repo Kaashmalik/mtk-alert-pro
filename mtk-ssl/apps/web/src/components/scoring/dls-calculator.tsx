@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@mtk/ui";
 import { Card } from "@mtk/ui";
 import { Calculator, X } from "lucide-react";
-import { calculateDLS, calculateDLSSecondInnings, DLSResult } from "@/lib/dls-calculator";
+import { calculateDLSSecondInnings, DLSResult } from "@/lib/dls-calculator";
 
 interface DLSCalculatorProps {
   targetRuns: number;

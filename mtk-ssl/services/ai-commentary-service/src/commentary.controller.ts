@@ -1,23 +1,6 @@
 import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern, Payload, Ctx, KafkaContext } from '@nestjs/microservices';
-import { CommentaryService } from './commentary.service';
-
-interface BallEvent {
-  matchId: string;
-  tenantId: string;
-  inning: number;
-  over: number;
-  ball: number;
-  runs: number;
-  extras?: { type: string; runs: number };
-  wicket?: { type: string; playerOut: string; dismissedBy?: string };
-  batsmanId: string;
-  batsmanName: string;
-  bowlerId: string;
-  bowlerName: string;
-  shotType?: string;
-  timestamp: string;
-}
+import { CommentaryService, BallEvent, Commentary } from './commentary.service';
 
 @Controller()
 export class CommentaryController {
@@ -26,7 +9,7 @@ export class CommentaryController {
   constructor(private readonly commentaryService: CommentaryService) {}
 
   @MessagePattern('ssl.scoring.ball-events')
-  async handleBallEvent(@Payload() event: BallEvent, @Ctx() context: KafkaContext) {
+  async handleBallEvent(@Payload() event: BallEvent, @Ctx() _context: KafkaContext): Promise<Commentary | null> {
     this.logger.debug(`Processing ball event: ${event.matchId} - ${event.over}.${event.ball}`);
     
     try {

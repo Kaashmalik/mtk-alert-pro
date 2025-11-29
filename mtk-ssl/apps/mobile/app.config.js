@@ -58,6 +58,7 @@ module.exports = {
   scheme: "ssl",
   plugins: [
     "expo-router",
+    "expo-localization",
     [
       "expo-notifications",
       {
@@ -87,64 +88,4 @@ module.exports = {
     policy: "appVersion",
   },
 };
-
-/**
- * Fetch tenant branding from API
- */
-async function getTenantBranding(tenantId) {
-  if (!tenantId) return null;
-
-  try {
-    const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:4000";
-    const response = await fetch(`${apiUrl}/tenants/${tenantId}/branding`);
-    if (response.ok) {
-      return await response.json();
-    }
-  } catch (error) {
-    console.error("Failed to fetch tenant branding:", error);
-  }
-  return null;
-}
-
-/**
- * Generate app config based on tenant branding
- */
-async function generateConfig() {
-  let config = { ...defaultConfig };
-
-  // If tenant ID is provided, fetch branding
-  if (tenantId && isEnterprise) {
-    const branding = await getTenantBranding(tenantId);
-    if (branding) {
-      config = {
-        ...config,
-        name: branding.appName || config.name,
-        slug: branding.appName?.toLowerCase().replace(/\s+/g, "-") || config.slug,
-        splash: {
-          ...config.splash,
-          image: branding.mobileAppSplashUrl || config.splash.image,
-          backgroundColor: branding.primaryColor || config.splash.backgroundColor,
-        },
-        icon: branding.mobileAppIconUrl || config.icon,
-        ios: {
-          ...config.ios,
-          bundleIdentifier: branding.mobileAppBundleId || config.ios.bundleIdentifier,
-        },
-        android: {
-          ...config.android,
-          package: branding.mobileAppPackageName || config.android.package,
-          adaptiveIcon: {
-            ...config.android.adaptiveIcon,
-            backgroundColor: branding.primaryColor || config.android.adaptiveIcon.backgroundColor,
-          },
-        },
-      };
-    }
-  }
-
-  return config;
-}
-
-// Export config (Expo will use this)
-module.exports = generateConfig();
 

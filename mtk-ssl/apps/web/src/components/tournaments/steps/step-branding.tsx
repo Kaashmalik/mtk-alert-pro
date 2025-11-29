@@ -1,8 +1,9 @@
 "use client"
+/* eslint-disable @next/next/no-img-element */
 
 import { UseFormReturn } from "react-hook-form"
-import { Card, CardContent, Input, Label, Button } from "@mtk/ui"
-import { Upload, Image as ImageIcon } from "lucide-react"
+import { Card, CardContent, Input, Label } from "@mtk/ui"
+import { Image as ImageIcon } from "lucide-react"
 import { TournamentFormData } from "../tournament-wizard"
 import { useLanguage } from "@/hooks/use-language"
 import { useState } from "react"

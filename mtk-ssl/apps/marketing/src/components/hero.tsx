@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@mtk/ui";
-import { CricketBall, TrendingUp } from "lucide-react";
+import { Circle, TrendingUp } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const liveScores = [
@@ -86,7 +86,7 @@ export function Hero() {
               }}
             >
               <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full shadow-2xl flex items-center justify-center">
-                <CricketBall className="w-12 h-12 text-white" />
+                <Circle className="w-12 h-12 text-white" />
               </div>
               <motion.div
                 className="absolute inset-0 bg-emerald-400 rounded-full blur-xl opacity-50"

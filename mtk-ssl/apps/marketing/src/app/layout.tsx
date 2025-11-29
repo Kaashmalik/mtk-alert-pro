@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Nastaliq_Urdu } from "next/font/google";
-import { ThemeProvider } from "next-themes";
+import { Providers } from "@/components/providers";
 import "./globals.css";
 
 const inter = Inter({ 
@@ -127,14 +127,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${notoNastaliq.variable} font-sans`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
+        <Providers>
           {children}
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

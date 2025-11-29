@@ -1,5 +1,5 @@
 import type { Config } from "tailwindcss";
-import { tailwindConfig as baseConfig } from "@mtk/config/src/tailwind";
+import { tailwindConfig as baseConfig } from "../../packages/config/src/tailwind";
 
 const config: Config = {
   ...baseConfig,
@@ -12,12 +12,15 @@ const config: Config = {
   theme: {
     ...baseConfig.theme,
     extend: {
+      ...baseConfig.theme?.extend,
       fontFamily: {
+        ...baseConfig.theme?.extend?.fontFamily,
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
         urdu: ["var(--font-urdu)", "Noto Nastaliq Urdu", "serif"],
       },
     },
   },
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   plugins: [require("tailwindcss-animate")],
 };
 

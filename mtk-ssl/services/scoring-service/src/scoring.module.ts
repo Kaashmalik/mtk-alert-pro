@@ -1,10 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ScoringController } from './scoring.controller';
 import { ScoringService } from './scoring.service';
 import { ScoringGateway } from './scoring.gateway';
-import { RedisModule } from './redis/redis.module';
-import { KafkaModule } from './kafka/kafka.module';
 
 @Module({
   imports: [
@@ -12,10 +9,8 @@ import { KafkaModule } from './kafka/kafka.module';
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
     }),
-    RedisModule,
-    KafkaModule,
   ],
-  controllers: [ScoringController],
   providers: [ScoringService, ScoringGateway],
+  exports: [ScoringService],
 })
 export class ScoringModule {}

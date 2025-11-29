@@ -3,7 +3,16 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
-export function TenantBrandingProvider({ branding }: { branding: any }) {
+interface TenantBranding {
+  primaryColor?: string;
+  secondaryColor?: string;
+  accentColor?: string;
+  fontFamily?: string;
+  faviconUrl?: string;
+  customCss?: string;
+}
+
+export function TenantBrandingProvider({ branding }: { branding: TenantBranding | null }) {
   const pathname = usePathname();
 
   useEffect(() => {

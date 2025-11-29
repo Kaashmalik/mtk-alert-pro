@@ -7,7 +7,7 @@ import { eq, and, lt } from "drizzle-orm";
 import * as fs from "fs/promises";
 import * as path from "path";
 
-// Placeholder for acme-client (install separately)
+// Placeholder for acme-client (install separately: pnpm add acme-client)
 const acme = {
   directory: {
     letsencrypt: {
@@ -17,18 +17,18 @@ const acme = {
   },
   crypto: {
     createPrivateKey: async () => Buffer.from("placeholder"),
-    createCsr: async () => [Buffer.from("key"), Buffer.from("csr")],
+    createCsr: async (_options: { commonName: string }) => [Buffer.from("key"), Buffer.from("csr")] as [Buffer, Buffer],
   },
   Client: class {
-    constructor() {}
-    async createOrder() {}
-    async getAuthorizations() {}
-    async getChallengeKeyAuthorization() {}
-    async verifyChallenge() {}
-    async completeChallenge() {}
-    async waitForValidStatus() {}
-    async finalizeOrder() {}
-    async getCertificate() {}
+    constructor(_options: { directoryUrl: string; accountKey: Buffer }) {}
+    async createOrder(_options: { identifiers: { type: string; value: string }[] }) { return {}; }
+    async getAuthorizations(_order: unknown) { return []; }
+    async getChallengeKeyAuthorization(_challenge: unknown) { return ""; }
+    async verifyChallenge(_authz: unknown, _challenge: unknown) {}
+    async completeChallenge(_challenge: unknown) {}
+    async waitForValidStatus(_challenge: unknown) {}
+    async finalizeOrder(_order: unknown, _csr: Buffer) {}
+    async getCertificate(_order: unknown) { return ""; }
   },
 };
 

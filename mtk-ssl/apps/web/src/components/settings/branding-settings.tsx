@@ -11,12 +11,18 @@ import { Label } from "@mtk/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@mtk/ui";
 import { CheckCircle2, XCircle, Loader2, Globe, Mail, Smartphone, Palette } from "lucide-react";
 // Simple toast implementation
-function toast(message: string, type: "success" | "error" = "success") {
-  // In production, use a proper toast library like sonner
-  if (typeof window !== "undefined") {
-    alert(message);
+const toast = {
+  success: (message: string) => {
+    if (typeof window !== "undefined") {
+      alert(message);
+    }
+  },
+  error: (message: string) => {
+    if (typeof window !== "undefined") {
+      alert(message);
+    }
   }
-}
+};
 
 const brandingSchema = z.object({
   // Basic Branding
@@ -27,7 +33,7 @@ const brandingSchema = z.object({
   secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color"),
   accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color"),
   fontFamily: z.string().optional(),
-  hideSslBranding: z.boolean().default(false),
+  hideSslBranding: z.boolean().optional(),
 
   // Custom Domain
   customDomain: z.string().optional(),
@@ -45,12 +51,21 @@ const brandingSchema = z.object({
 
 type BrandingFormData = z.infer<typeof brandingSchema>;
 
+interface VerificationStatus {
+  status: "pending" | "verified" | "failed";
+  verificationType?: string;
+  expectedValue?: string;
+  spfRecord?: string;
+  dkimPublicKey?: string;
+  dkimSelector?: string;
+}
+
 export function BrandingSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [dnsVerification, setDnsVerification] = useState<any>(null);
-  const [emailVerification, setEmailVerification] = useState<any>(null);
-  const [sslStatus, setSslStatus] = useState<any>(null);
+  const [dnsVerification, setDnsVerification] = useState<VerificationStatus | null>(null);
+  const [emailVerification, setEmailVerification] = useState<VerificationStatus | null>(null);
+  const [sslStatus, setSslStatus] = useState<{ status: string } | null>(null);
 
   const form = useForm<BrandingFormData>({
     resolver: zodResolver(brandingSchema),
@@ -65,6 +80,7 @@ export function BrandingSettings() {
 
   useEffect(() => {
     loadBrandingSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadBrandingSettings() {

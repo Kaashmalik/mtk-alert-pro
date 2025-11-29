@@ -127,7 +127,7 @@ export class ScoringGateway implements OnGatewayConnection, OnGatewayDisconnect 
       return { success: true, result };
     } catch (error) {
       console.error('Error recording ball:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 
@@ -144,7 +144,7 @@ export class ScoringGateway implements OnGatewayConnection, OnGatewayDisconnect 
 
       return { success: true, result };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 

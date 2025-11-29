@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { OpenAIService } from './openai/openai.service';
 import { Kafka, Producer } from 'kafkajs';
 
-interface BallEvent {
+export interface BallEvent {
   matchId: string;
   tenantId: string;
   inning: number;
@@ -20,7 +20,7 @@ interface BallEvent {
   timestamp: string;
 }
 
-interface Commentary {
+export interface Commentary {
   matchId: string;
   ballId: string;
   english: string;
