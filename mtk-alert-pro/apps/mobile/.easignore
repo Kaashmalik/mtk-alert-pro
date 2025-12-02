@@ -1,0 +1,15 @@
+node_modules/
+.expo/
+.expo-shared/
+ios/
+*.log
+.DS_Store
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+.tmp/
+.temp/
+coverage/
+dist/
+build/
+__tests__/
