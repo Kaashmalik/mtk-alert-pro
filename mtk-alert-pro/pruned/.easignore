@@ -1,0 +1,61 @@
+# Node modules (EAS installs fresh on the server)
+node_modules/
+../node_modules/
+../../node_modules/
+
+# Expo cache and shared assets
+.expo/
+../.expo/
+.expo-shared/
+../.expo-shared/
+
+# Native folders (huge, never needed for managed builds)
+android/
+ios/
+../android/
+../ios/
+
+# Test/coverage artifacts
+coverage/
+__tests__/
+__mocks__/
+*.test.js
+*.test.ts
+*.test.tsx
+*.spec.js
+*.spec.ts
+*.spec.tsx
+
+# Logs and temp files
+*.log
+.DS_Store
+.tmp/
+.temp/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Other common bloat
+.git/
+../.git/
+.gitignore
+.pnpm-store/
+../.pnpm-store/
+../../.pnpm-store/
+dist/
+build/
+../dist/
+../build/
+pruned/
+../pruned/
+tmp/
+temp/
+../tmp/
+../temp/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db

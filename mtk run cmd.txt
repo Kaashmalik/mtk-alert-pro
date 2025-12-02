@@ -1,0 +1,17 @@
+# Backend
+cd d:\MalikTech\mtk-agent\backend
+.venv\Scripts\activate
+uvicorn app.main:app --host 127.0.0.1 --port 8765
+
+# Frontend (refresh browser)
+# Terminal 1: Start Ollama
+ollama serve
+
+# Terminal 2: Start Backend
+cd d:\MalikTech\mtk-agent\backend
+.venv\Scripts\activate
+uvicorn app.main:app --host 127.0.0.1 --port 8765
+
+# Terminal 3: Start Frontend
+cd d:\MalikTech\mtk-agent\desktop
+npm run dev

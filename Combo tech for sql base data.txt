@@ -1,0 +1,4 @@
+Frontend (Next.js / React / Vite) → Vercel
+User Auth + Small DB + Storage → Supabase
+Large Data + Analytics → TiDB Cloud
+CDN + Edge Cache → Vercel + Cloudflare

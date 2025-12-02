@@ -1,0 +1,104 @@
+You are working like an experimce seo and adsense approval websites builder make this project must follow and implement all these things with best practice 
+### Ultimate 2025 Tech Stack & Development Standards I Follow for EVERY Project (100% AdSense Approval + Rank #1 SEO)
+
+This is the **exact technology setup** I use on all my 50+ sites in 2025.  
+Zero rejections, all approved in 3–10 days, and most sites hit page 1 Google within 3–6 months.
+
+Follow this like a blueprint during development → your site will be technically perfect for AdSense + SEO.
+
+#### 1. Domain & Hosting (Most Important Technical Choice)
+- **Domain**: Custom domain only (.com preferred) → Buy from Namecheap or Porkbun  
+- **Hosting**: ONLY these two (I tested everything in 2025):
+  1. **Cloudways** (DigitalOcean or Vultr server) – $11–$14/month → Best for speed + easy scaling  
+  2. **Rocket.net** or **RunCloud + LiteSpeed server** – Slightly more expensive but fastest in 2025  
+- Why? LiteSpeed server + Redis + Breeze cache = 95–100 PageSpeed mobile without effort  
+Never use Hostinger/Shared hosting/Bluehost – too slow in 2025, Google rejects low Core Web Vitals
+
+#### 2. CMS & Theme (Lightweight Only – Heavy Themes Kill Approval)
+- CMS: **WordPress.org** (latest version, auto-update on)
+- Theme: Only these two (I use GeneratePress Premium on 90% of sites)
+  1. **GeneratePress Premium** ($59/year) – Lightest + best for SEO
+  2. **Astra Pro** or **Kadence Pro (alternative)
+- Never use Elementor Hello theme + Elementor Pro full build → Too heavy, Core Web Vitals fail in 2025
+- I build with **GenerateBlocks Pro** (not full page builder) → Clean code, fast loading
+
+#### 3. Mandatory Plugins (Exact List I Install on Day 1 – Only 12 Plugins Max)
+I never install more than 12 plugins. Extra plugins = slow site = rejection.
+
+**Core Plugins (Install First):**
+1. GeneratePress Premium + GenerateBlocks Pro  
+2. **Rank Math Pro** ($59/year) – Best SEO plugin in 2025 (better than Yoast)  
+   - Auto Schema, Content AI, perfect redirection, indexnow
+3. **WP Rocket** ($59/year) – #1 cache plugin (or Perfmatters + LiteSpeed Cache if on Rocket.net)
+4. **Imagify** or **ShortPixel** – Auto image optimization + WebP
+5. **Contact Form 7** + Flamingo (for contact page)
+
+**Security & Performance:**
+6. **Wordfence** (free) or **Solid Security Pro**
+7. **Perfmatters** ($25/year) – Disable useless WP features (best for Core Web Vitals
+
+**Extra Helpful (Always Install):**
+8. **Auto Post Thumbnail** or **Quick Featured Images**  
+9. **Simple Author Box** or **Rank Math Author Bio**  
+10. **Table of Contents Plus** or **LuckyWP Table of Contents**  
+11. **Broken Link Checker** or **Rank Math Redirections**  
+12. **ads.txt Manager** (for after approval)
+
+Never install: All-in-One SEO, MonsterInsights, Smush (slow), Jetpack, Elementor full
+
+#### 4. Technical Settings I Apply During Development (Copy These Exact Settings)
+
+**WP Rocket Settings (Most Important for 2025 Core Web Vitals):**
+- Enable: Minify CSS/JS, Combine CSS/JS (if no errors), Remove unused CSS, Lazy load images, Preload links, Redis object cache
+- Delay JavaScript execution: On
+- Lazy load iframe: On
+
+**File Optimization** → Remove Unused CSS + Delay JS = 95+ mobile score guaranteed
+
+**Rank Math Settings:**
+- Schema: Article for blog posts, WebPage for pages
+- Enable IndexNow
+- Auto add alt text + image title
+- 301 redirects for old URLs
+- Breadcrumbs enabled
+- Open Graph + Twitter cards
+
+**GeneratePress Settings:**
+- Disable all unnecessary elements (disable title if using Rank Math)
+- Typography: System font stack (no Google fonts = faster)
+- Colors: Simple palette
+
+**Other Settings:**
+- Permalinks: Post name (%postname%)
+- Disable Gutenberg → Use Classic Editor or GenerateBlocks
+- Disable comments completely (or moderate strictly)
+- XML Sitemap: Rank Math auto generates
+- robots.txt: Default + allow everything
+
+#### 5. Development Best Practices I Follow Every Time
+- PageSpeed Insights mobile score: Must be 90+ before publishing any post
+- Test here: https://pagespeed.web.dev/
+- Core Web Vitals: Green in Search Console (LCP < 2.5s, CLS < 0.1, FID < 100ms)
+- Mobile-first design (test everything on phone)
+- Image size: Max 150KB per image, WebP format, proper alt text
+- No popups or interstitial ads before approval
+- Clean HTML (no inline CSS bloat)
+- HTTPS enforced
+- CDN: Cloudflare (free) or BunnyCDN
+
+#### 6. Final Pre-Launch Technical Checklist
+✓ PageSpeed mobile 90–100  
+✓ Core Web Vitals all green  
+✓ Mobile-Friendly test passed  
+✓ No console errors (check Chrome DevTools)  
+✓ Search Console + Analytics connected  
+✓ Site indexed (site:yourdomain.com shows pages)  
+✓ ads.txt file created (empty)  
+✓ Structured data valid (test in Rich Results Test)
+
+This exact tech stack + settings = technically perfect site in 2025.
+
+I have used this on every project since January 2025 → 100% AdSense approval + sites ranking top 3 for competitive keywords.
+
+Save this as your permanent development standard.  
+Next site you build → follow this → guaranteed approval + fast ranking.

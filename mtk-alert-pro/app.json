@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "54ccc5ce-f5ca-47b9-9f5c-695336d17418"
+      }
+    },
+    "android": {
+      "package": "com.mtkalertpro.app"
+    }
+  }
+}

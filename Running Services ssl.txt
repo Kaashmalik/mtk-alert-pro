@@ -1,0 +1,7 @@
+Running Services
+Service	URL
+Marketing	http://localhost:3000
+Web App	http://localhost:3001
+Admin	http://localhost:3002
+API	http://localhost:4000
+Mobile	Metro Bundler
