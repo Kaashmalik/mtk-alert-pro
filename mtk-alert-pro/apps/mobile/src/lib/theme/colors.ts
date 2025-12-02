@@ -1,10 +1,12 @@
 // MTK AlertPro Design System - Colors
 export const colors = {
-  // Brand
+  // Brand - Softer, more professional colors
   brand: {
-    red: '#EF4444',
-    redDark: '#DC2626',
-    redLight: '#FCA5A5',
+    red: '#E63946',        // Softer red, easier on eyes
+    redDark: '#C1272D',    // Darker shade
+    redLight: '#FF8A94',   // Light accent
+    primary: '#2B5876',    // Professional blue-gray
+    accent: '#4E8098',     // Softer accent color
   },
   
   // Backgrounds

@@ -94,8 +94,16 @@ export const useAuthStore = create<AuthState>()(
       },
 
       signOut: async () => {
-        await supabase.auth.signOut();
-        set({ user: null, isAuthenticated: false });
+        try {
+          await supabase.auth.signOut();
+          set({ user: null, isAuthenticated: false });
+          // Clear any cached data
+          await AsyncStorage.clear();
+        } catch (error) {
+          console.error('Sign out error:', error);
+          // Still clear local state even if server signout fails
+          set({ user: null, isAuthenticated: false });
+        }
       },
 
       updateProfile: async (updates) => {

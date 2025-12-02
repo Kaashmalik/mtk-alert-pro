@@ -1,14 +1,34 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Alert,
+  StyleSheet,
+  StatusBar,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, Stack } from 'expo-router';
-import { Camera, Link2, User, Lock, ArrowLeft } from 'lucide-react-native';
+import {
+  Camera,
+  Link2,
+  User,
+  Lock,
+  ArrowLeft,
+  Wifi,
+  Hash,
+  Globe,
+  HelpCircle,
+} from 'lucide-react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { TouchableOpacity } from 'react-native';
 import { Button, Input } from '@/components/ui';
 import { useCameraStore } from '@/stores';
+import { colors, spacing, fontSize, borderRadius } from '@/lib/theme';
+
+type AddMethod = 'rtsp' | 'ip' | 'serial' | 'router';
 
 const cameraSchema = z.object({
   name: z.string().min(1, 'Camera name is required'),
@@ -22,17 +42,26 @@ const cameraSchema = z.object({
 
 type CameraForm = z.infer<typeof cameraSchema>;
 
-const CAMERA_PRESETS = [
-  { name: 'Hikvision', template: 'rtsp://{ip}:554/Streaming/Channels/101' },
-  { name: 'Dahua', template: 'rtsp://{ip}:554/cam/realmonitor?channel=1&subtype=0' },
-  { name: 'Reolink', template: 'rtsp://{ip}:554/h264Preview_01_main' },
-  { name: 'Custom', template: '' },
+const CAMERA_BRANDS = [
+  { id: 'hikvision', name: 'Hikvision', rtspPort: '554', path: '/Streaming/Channels/101' },
+  { id: 'dahua', name: 'Dahua', rtspPort: '554', path: '/cam/realmonitor?channel=1&subtype=0' },
+  { id: 'reolink', name: 'Reolink', rtspPort: '554', path: '/h264Preview_01_main' },
+  { id: 'pyronix', name: 'Pyronix', rtspPort: '8554', path: '/stream1' },
+  { id: 'custom', name: 'Custom', rtspPort: '554', path: '/stream' },
+];
+
+const ADD_METHODS = [
+  { id: 'ip' as const, title: 'IP/Domain', icon: Globe, description: 'Enter camera IP address or domain' },
+  { id: 'rtsp' as const, title: 'RTSP URL', icon: Link2, description: 'Direct RTSP stream URL' },
+  { id: 'serial' as const, title: 'Serial Number', icon: Hash, description: 'Find by device serial' },
+  { id: 'router' as const, title: 'Router Guide', icon: Wifi, description: 'Find cameras on LAN' },
 ];
 
 export default function AddCameraScreen() {
   const { addCamera, testConnection } = useCameraStore();
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<AddMethod>('ip');
+  const [selectedBrand, setSelectedBrand] = useState<string>('hikvision');
 
   const {
     control,
@@ -49,11 +78,13 @@ export default function AddCameraScreen() {
     },
   });
 
-  const handlePresetSelect = (preset: typeof CAMERA_PRESETS[0]) => {
-    setSelectedPreset(preset.name);
-    if (preset.template) {
-      setValue('rtspUrl', preset.template);
-    }
+  const buildRtspUrl = (ip: string, brand: typeof CAMERA_BRANDS[0], username?: string, password?: string) => {
+    const auth = username && password ? `${username}:${password}@` : '';
+    return `rtsp://${auth}${ip}:${brand.rtspPort}${brand.path}`;
+  };
+
+  const handleMethodSelect = (method: AddMethod) => {
+    setSelectedMethod(method);
   };
 
   const onSubmit = async (data: CameraForm) => {

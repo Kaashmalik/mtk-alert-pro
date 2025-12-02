@@ -1,5 +1,6 @@
 import { View, Text, ScrollView, TouchableOpacity, Switch, Alert, StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import {
   Bell,
   Shield,
@@ -23,7 +24,14 @@ export default function SettingsScreen() {
       'Are you sure you want to sign out?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign Out', style: 'destructive', onPress: signOut },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+            router.replace('/(auth)/login');
+          },
+        },
       ]
     );
   };
@@ -148,8 +156,31 @@ export default function SettingsScreen() {
           />
         </View>
 
+        {/* Subscription */}
+        {user?.subscriptionTier === 'free' && (
+          <>
+            <Text style={styles.sectionTitle}>Subscription</Text>
+            <TouchableOpacity
+              style={styles.upgradeCard}
+              onPress={() => router.push('/subscription')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.upgradeContent}>
+                <Crown size={24} color={colors.status.warning} />
+                <View style={styles.upgradeText}>
+                  <Text style={styles.upgradeTitle}>Upgrade to Pro</Text>
+                  <Text style={styles.upgradeSubtitle}>
+                    Unlimited cameras, face recognition & more
+                  </Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color={colors.text.muted} />
+            </TouchableOpacity>
+          </>
+        )}
+
         {/* Support */}
-        <Text style={styles.sectionTitle}>Support</Text>
+        <Text style={styles.sectionTitle}>Support & About</Text>
         <View style={styles.sectionCard}>
           <SettingItem
             icon={<HelpCircle size={20} color={colors.status.warning} />}
@@ -158,9 +189,8 @@ export default function SettingsScreen() {
           />
           <SettingItem
             icon={<Info size={20} color={colors.text.muted} />}
-            title="About"
-            subtitle="Version 1.0.0"
-            onPress={() => {}}
+            title="About MTK AlertPro"
+            subtitle="Version 1.0.0 • Developed by Malik Kashif"
             isLast
           />
         </View>
@@ -278,6 +308,36 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   settingSubtitle: {
+    fontSize: fontSize.sm,
+    color: colors.text.secondary,
+    marginTop: 2,
+  },
+  upgradeCard: {
+    backgroundColor: colors.bg.secondary,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xxl,
+    borderWidth: 2,
+    borderColor: colors.status.warning,
+  },
+  upgradeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  upgradeText: {
+    marginLeft: spacing.md,
+    flex: 1,
+  },
+  upgradeTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+  upgradeSubtitle: {
     fontSize: fontSize.sm,
     color: colors.text.secondary,
     marginTop: 2,
