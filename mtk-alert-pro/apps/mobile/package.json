@@ -6,7 +6,9 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:android": "powershell -ExecutionPolicy Bypass -File scripts/build-android.ps1 -Profile preview",
+    "build:android:prod": "powershell -ExecutionPolicy Bypass -File scripts/build-android.ps1 -Profile production"
   },
   "dependencies": {
     "expo": "~52.0.0",

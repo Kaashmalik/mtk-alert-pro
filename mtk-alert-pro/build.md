@@ -6,9 +6,29 @@
 
 ## 🎉 Success!
 
-**APK Build:** https://expo.dev/accounts/mtk-alert-pro/projects/mtk-alert-pro/builds/efe85154-6f17-4ce8-9926-83be08d6dc05
+**Latest APK:** https://expo.dev/artifacts/eas/msDC8obGyzFdiJQzR3i5Tu.apk
 
-The Android APK was successfully built on Dec 2, 2025. Scan the QR code on the build page or download directly.
+**Build Page:** https://expo.dev/accounts/mtk-alert-pro/projects/mtk-alert-pro/builds/a5af4c11-c267-4db8-93bc-6228a5f5bce2
+
+The Android APK was successfully built on Dec 2, 2025. Scan the QR code on the build page or download the APK directly.
+
+## 🛠️ How to Build
+
+From the `apps/mobile` directory:
+
+```powershell
+# Preview build (APK for testing)
+pnpm build:android
+
+# Production build (AAB for Play Store)
+pnpm build:android:prod
+```
+
+The build script automatically:
+1. Creates an isolated temp folder (avoids monorepo symlink issues)
+2. Installs dependencies with npm
+3. Runs EAS Build
+4. Cleans up
 
 ---
 
