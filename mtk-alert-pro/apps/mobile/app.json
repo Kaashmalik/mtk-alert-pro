@@ -23,7 +23,6 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1E293B"
       },
-      "edgeToEdgeEnabled": false,
       "permissions": [
         "INTERNET",
         "CAMERA",

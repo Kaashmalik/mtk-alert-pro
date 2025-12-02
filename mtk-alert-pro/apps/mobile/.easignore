@@ -2,6 +2,7 @@ node_modules/
 .expo/
 .expo-shared/
 ios/
+android/
 *.log
 .DS_Store
 pnpm-lock.yaml
