@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,66 +7,42 @@ import {
   StyleSheet,
   StatusBar,
   TouchableOpacity,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, Stack } from 'expo-router';
-import {
-  Camera,
-  Link2,
-  User,
-  Lock,
-  ArrowLeft,
-  Wifi,
-  Hash,
-  Globe,
-  HelpCircle,
-} from 'lucide-react-native';
+import { Camera, Link2, User, Lock, ArrowLeft, Wifi, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, Input } from '@/components/ui';
 import { useCameraStore } from '@/stores';
-import { colors, spacing, fontSize, borderRadius } from '@/lib/theme';
-
-type AddMethod = 'rtsp' | 'ip' | 'serial' | 'router';
+import { designSystem } from '@/theme/design-system';
+import { CAMERA_BRANDS, generateRtspUrl, isValidIpAddress } from '@/lib/camera/rtspHelper';
 
 const cameraSchema = z.object({
   name: z.string().min(1, 'Camera name is required'),
-  rtspUrl: z.string().url('Invalid RTSP URL').refine(
-    (url) => url.startsWith('rtsp://'),
-    'URL must start with rtsp://'
-  ),
+  rtspUrl: z.string().min(1, 'RTSP URL is required'),
   username: z.string().optional(),
   password: z.string().optional(),
 });
 
 type CameraForm = z.infer<typeof cameraSchema>;
 
-const CAMERA_BRANDS = [
-  { id: 'hikvision', name: 'Hikvision', rtspPort: '554', path: '/Streaming/Channels/101' },
-  { id: 'dahua', name: 'Dahua', rtspPort: '554', path: '/cam/realmonitor?channel=1&subtype=0' },
-  { id: 'reolink', name: 'Reolink', rtspPort: '554', path: '/h264Preview_01_main' },
-  { id: 'pyronix', name: 'Pyronix', rtspPort: '8554', path: '/stream1' },
-  { id: 'custom', name: 'Custom', rtspPort: '554', path: '/stream' },
-];
-
-const ADD_METHODS = [
-  { id: 'ip' as const, title: 'IP/Domain', icon: Globe, description: 'Enter camera IP address or domain' },
-  { id: 'rtsp' as const, title: 'RTSP URL', icon: Link2, description: 'Direct RTSP stream URL' },
-  { id: 'serial' as const, title: 'Serial Number', icon: Hash, description: 'Find by device serial' },
-  { id: 'router' as const, title: 'Router Guide', icon: Wifi, description: 'Find cameras on LAN' },
-];
-
 export default function AddCameraScreen() {
-  const { addCamera, testConnection } = useCameraStore();
+  const addCamera = useCameraStore((state) => state.addCamera);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<AddMethod>('ip');
   const [selectedBrand, setSelectedBrand] = useState<string>('hikvision');
+  const [showUrlBuilder, setShowUrlBuilder] = useState(true);
+  const [ipAddress, setIpAddress] = useState('');
+  const [showBrandSelector, setShowBrandSelector] = useState(false);
 
   const {
     control,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<CameraForm>({
     resolver: zodResolver(cameraSchema),
@@ -78,33 +54,36 @@ export default function AddCameraScreen() {
     },
   });
 
-  const buildRtspUrl = (ip: string, brand: typeof CAMERA_BRANDS[0], username?: string, password?: string) => {
-    const auth = username && password ? `${username}:${password}@` : '';
-    return `rtsp://${auth}${ip}:${brand.rtspPort}${brand.path}`;
-  };
+  const watchedUsername = watch('username');
+  const watchedPassword = watch('password');
 
-  const handleMethodSelect = (method: AddMethod) => {
-    setSelectedMethod(method);
-  };
+  const handleGenerateUrl = useCallback(() => {
+    if (!isValidIpAddress(ipAddress)) {
+      Alert.alert('Invalid IP', 'Please enter a valid IP address');
+      return;
+    }
+
+    const url = generateRtspUrl(selectedBrand, ipAddress, {
+      username: watchedUsername || undefined,
+      password: watchedPassword || undefined,
+    });
+
+    if (url) {
+      setValue('rtspUrl', url);
+      setShowUrlBuilder(false);
+      Alert.alert('URL Generated', 'RTSP URL has been generated. You can edit it if needed.');
+    }
+  }, [ipAddress, selectedBrand, watchedUsername, watchedPassword, setValue]);
+
+  const selectedBrandData = CAMERA_BRANDS.find(b => b.id === selectedBrand);
 
   const onSubmit = async (data: CameraForm) => {
     setIsLoading(true);
     try {
-      // Test connection first
-      const isValid = await testConnection(data.rtspUrl);
-      if (!isValid) {
-        Alert.alert('Warning', 'Could not validate the RTSP URL format. Add anyway?', [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Add Anyway', onPress: () => saveCamera(data) },
-        ]);
-        setIsLoading(false);
-        return;
-      }
       await saveCamera(data);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to add camera';
       Alert.alert('Error', message);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -119,7 +98,10 @@ export default function AddCameraScreen() {
       detectionSettings: {
         person: true,
         vehicle: true,
+        face: false,
         sensitivity: 0.7,
+        notificationsEnabled: true,
+        alarmEnabled: true,
       },
     });
     Alert.alert('Success', 'Camera added successfully!', [
@@ -133,44 +115,117 @@ export default function AddCameraScreen() {
         options={{
           headerShown: true,
           title: 'Add Camera',
-          headerStyle: { backgroundColor: '#1E293B' },
-          headerTintColor: '#fff',
+          headerStyle: { backgroundColor: designSystem.colors.background.secondary },
+          headerTintColor: designSystem.colors.text.primary,
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} className="mr-4">
-              <ArrowLeft size={24} color="white" />
+            <TouchableOpacity onPress={() => router.back()} style={{ marginRight: designSystem.spacing.md }}>
+              <ArrowLeft size={24} color={designSystem.colors.text.primary} />
             </TouchableOpacity>
           ),
         }}
       />
-      <SafeAreaView className="flex-1 bg-slate-900" edges={['bottom']}>
-        <ScrollView className="flex-1 px-6" keyboardShouldPersistTaps="handled">
-          {/* Camera Icon */}
-          <View className="items-center my-6">
-            <View className="w-20 h-20 bg-slate-800 rounded-full items-center justify-center">
-              <Camera size={40} color="#06B6D4" />
-            </View>
-          </View>
 
-          {/* Brand Presets */}
-          <Text className="text-white font-semibold mb-3">Camera Brand</Text>
-          <View className="flex-row flex-wrap mb-6">
-            {CAMERA_PRESETS.map((preset) => (
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <StatusBar barStyle="light-content" backgroundColor={designSystem.colors.background.primary} />
+        <ScrollView style={styles.scrollView} keyboardShouldPersistTaps="handled">
+
+          {/* Smart URL Builder Header */}
+          <Animated.View entering={FadeInDown.duration(600)} style={styles.urlBuilderHeader}>
+            <View style={styles.urlBuilderHeaderIcon}>
+              <Wifi size={24} color={designSystem.colors.primary[500]} />
+            </View>
+            <View style={styles.urlBuilderHeaderText}>
+              <Text style={styles.urlBuilderHeaderTitle}>Smart Camera Setup</Text>
+              <Text style={styles.urlBuilderHeaderDesc}>
+                Enter your camera's IP address and we'll generate the RTSP URL
+              </Text>
+            </View>
+          </Animated.View>
+
+          {/* Smart URL Builder */}
+          {showUrlBuilder && (
+            <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.urlBuilder}>
+              <Text style={styles.urlBuilderTitle}>Smart URL Builder</Text>
+
+              {/* Brand Selector */}
               <TouchableOpacity
-                key={preset.name}
-                onPress={() => handlePresetSelect(preset)}
-                className={`mr-2 mb-2 px-4 py-2 rounded-full border ${
-                  selectedPreset === preset.name
-                    ? 'bg-brand-red border-brand-red'
-                    : 'bg-slate-800 border-slate-600'
-                }`}
+                style={styles.brandSelector}
+                onPress={() => setShowBrandSelector(!showBrandSelector)}
               >
-                <Text className="text-white">{preset.name}</Text>
+                <Text style={styles.brandSelectorLabel}>Camera Brand</Text>
+                <View style={styles.brandSelectorValue}>
+                  <Text style={styles.brandSelectorText}>
+                    {selectedBrandData?.name || 'Select Brand'}
+                  </Text>
+                  {showBrandSelector ? (
+                    <ChevronUp size={20} color={designSystem.colors.text.secondary} />
+                  ) : (
+                    <ChevronDown size={20} color={designSystem.colors.text.secondary} />
+                  )}
+                </View>
               </TouchableOpacity>
-            ))}
+
+              {showBrandSelector && (
+                <View style={styles.brandDropdown}>
+                  {CAMERA_BRANDS.filter(b => b.id !== 'custom').map((brand) => (
+                    <TouchableOpacity
+                      key={brand.id}
+                      style={[
+                        styles.brandDropdownItem,
+                        selectedBrand === brand.id && styles.brandDropdownItemActive,
+                      ]}
+                      onPress={() => {
+                        setSelectedBrand(brand.id);
+                        setShowBrandSelector(false);
+                      }}
+                    >
+                      <Text style={[
+                        styles.brandDropdownText,
+                        selectedBrand === brand.id && styles.brandDropdownTextActive,
+                      ]}>
+                        {brand.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {/* IP Address Input */}
+              <View style={styles.ipInputContainer}>
+                <Text style={styles.ipInputLabel}>Camera IP Address</Text>
+                <TextInput
+                  style={styles.ipInput}
+                  placeholder="192.168.1.100"
+                  placeholderTextColor={designSystem.colors.text.muted}
+                  value={ipAddress}
+                  onChangeText={setIpAddress}
+                  keyboardType="numeric"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={styles.generateButton}
+                onPress={handleGenerateUrl}
+              >
+                <Text style={styles.generateButtonText}>Generate RTSP URL</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.urlBuilderHint}>
+                💡 Enter credentials below for authenticated cameras
+              </Text>
+            </Animated.View>
+          )}
+
+          {/* Divider */}
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or enter manually</Text>
+            <View style={styles.dividerLine} />
           </View>
 
           {/* Form */}
-          <View className="space-y-4">
+          <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.form}>
             <Controller
               control={control}
               name="name"
@@ -178,7 +233,7 @@ export default function AddCameraScreen() {
                 <Input
                   label="Camera Name"
                   placeholder="e.g., Front Door, Backyard"
-                  leftIcon={<Camera size={20} color="#64748B" />}
+                  leftIcon={<Camera size={20} color={designSystem.colors.text.muted} />}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -187,7 +242,7 @@ export default function AddCameraScreen() {
               )}
             />
 
-            <View className="h-2" />
+            <View style={{ height: designSystem.spacing.md }} />
 
             <Controller
               control={control}
@@ -196,7 +251,7 @@ export default function AddCameraScreen() {
                 <Input
                   label="RTSP URL"
                   placeholder="rtsp://192.168.1.100:554/stream"
-                  leftIcon={<Link2 size={20} color="#64748B" />}
+                  leftIcon={<Link2 size={20} color={designSystem.colors.text.muted} />}
                   autoCapitalize="none"
                   autoCorrect={false}
                   value={value}
@@ -207,9 +262,9 @@ export default function AddCameraScreen() {
               )}
             />
 
-            <View className="h-2" />
+            <View style={{ height: designSystem.spacing.md }} />
 
-            <Text className="text-slate-400 text-sm mb-2">
+            <Text style={styles.credentialsLabel}>
               Camera Credentials (optional)
             </Text>
 
@@ -220,7 +275,7 @@ export default function AddCameraScreen() {
                 <Input
                   label="Username"
                   placeholder="admin"
-                  leftIcon={<User size={20} color="#64748B" />}
+                  leftIcon={<User size={20} color={designSystem.colors.text.muted} />}
                   autoCapitalize="none"
                   value={value}
                   onChangeText={onChange}
@@ -229,7 +284,7 @@ export default function AddCameraScreen() {
               )}
             />
 
-            <View className="h-2" />
+            <View style={{ height: designSystem.spacing.md }} />
 
             <Controller
               control={control}
@@ -238,7 +293,7 @@ export default function AddCameraScreen() {
                 <Input
                   label="Password"
                   placeholder="••••••••"
-                  leftIcon={<Lock size={20} color="#64748B" />}
+                  leftIcon={<Lock size={20} color={designSystem.colors.text.muted} />}
                   secureTextEntry
                   value={value}
                   onChangeText={onChange}
@@ -246,19 +301,18 @@ export default function AddCameraScreen() {
                 />
               )}
             />
-          </View>
+          </Animated.View>
 
           {/* Help Text */}
-          <View className="bg-slate-800 rounded-xl p-4 mt-6">
-            <Text className="text-slate-400 text-sm">
-              💡 <Text className="font-semibold text-slate-300">Tip:</Text> You can find
-              your camera's RTSP URL in its settings or manual. Most cameras use port 554.
+          <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.helpCard}>
+            <Text style={styles.helpText}>
+              💡 <Text style={styles.helpBold}>Tip:</Text> You can find your camera's RTSP URL in its settings or manual. Most cameras use port 554.
             </Text>
-          </View>
+          </Animated.View>
 
           {/* Submit Button */}
           <Button
-            className="mt-6 mb-8"
+            style={styles.submitButton}
             onPress={handleSubmit(onSubmit)}
             loading={isLoading}
           >
@@ -269,3 +323,175 @@ export default function AddCameraScreen() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: designSystem.colors.background.primary,
+  },
+  scrollView: {
+    flex: 1,
+    paddingHorizontal: designSystem.spacing.xxl,
+  },
+  urlBuilderHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: designSystem.colors.background.secondary,
+    borderRadius: designSystem.layout.radius.xl,
+    padding: designSystem.spacing.lg,
+    marginTop: designSystem.spacing.lg,
+    marginBottom: designSystem.spacing.lg,
+  },
+  urlBuilderHeaderIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(33, 150, 243, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: designSystem.spacing.md,
+  },
+  urlBuilderHeaderText: {
+    flex: 1,
+  },
+  urlBuilderHeaderTitle: {
+    fontSize: designSystem.typography.size.base,
+    fontWeight: '600',
+    color: designSystem.colors.text.primary,
+    marginBottom: designSystem.spacing.xs,
+  },
+  urlBuilderHeaderDesc: {
+    fontSize: designSystem.typography.size.sm,
+    color: designSystem.colors.text.secondary,
+    lineHeight: 18,
+  },
+  urlBuilder: {
+    backgroundColor: designSystem.colors.background.secondary,
+    borderRadius: designSystem.layout.radius.xl,
+    padding: designSystem.spacing.lg,
+    marginBottom: designSystem.spacing.xl,
+  },
+  urlBuilderTitle: {
+    fontSize: designSystem.typography.size.base,
+    fontWeight: '600',
+    color: designSystem.colors.text.primary,
+    marginBottom: designSystem.spacing.lg,
+  },
+  brandSelector: {
+    marginBottom: designSystem.spacing.md,
+  },
+  brandSelectorLabel: {
+    fontSize: designSystem.typography.size.sm,
+    color: designSystem.colors.text.secondary,
+    marginBottom: designSystem.spacing.xs,
+  },
+  brandSelectorValue: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: designSystem.colors.background.tertiary,
+    borderRadius: designSystem.layout.radius.lg,
+    padding: designSystem.spacing.md,
+  },
+  brandSelectorText: {
+    fontSize: designSystem.typography.size.base,
+    color: designSystem.colors.text.primary,
+  },
+  brandDropdown: {
+    backgroundColor: designSystem.colors.background.tertiary,
+    borderRadius: designSystem.layout.radius.lg,
+    marginBottom: designSystem.spacing.md,
+    overflow: 'hidden',
+  },
+  brandDropdownItem: {
+    paddingVertical: designSystem.spacing.md,
+    paddingHorizontal: designSystem.spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: designSystem.colors.border.default,
+  },
+  brandDropdownItemActive: {
+    backgroundColor: 'rgba(33, 150, 243, 0.1)',
+  },
+  brandDropdownText: {
+    fontSize: designSystem.typography.size.sm,
+    color: designSystem.colors.text.primary,
+  },
+  brandDropdownTextActive: {
+    color: designSystem.colors.primary[500],
+    fontWeight: '600',
+  },
+  ipInputContainer: {
+    marginBottom: designSystem.spacing.md,
+  },
+  ipInputLabel: {
+    fontSize: designSystem.typography.size.sm,
+    color: designSystem.colors.text.secondary,
+    marginBottom: designSystem.spacing.xs,
+  },
+  ipInput: {
+    backgroundColor: designSystem.colors.background.tertiary,
+    borderRadius: designSystem.layout.radius.lg,
+    padding: designSystem.spacing.md,
+    fontSize: designSystem.typography.size.base,
+    color: designSystem.colors.text.primary,
+  },
+  generateButton: {
+    backgroundColor: designSystem.colors.primary[500],
+    borderRadius: designSystem.layout.radius.lg,
+    padding: designSystem.spacing.md,
+    alignItems: 'center',
+  },
+  generateButtonText: {
+    fontSize: designSystem.typography.size.base,
+    fontWeight: '600',
+    color: 'white',
+  },
+  urlBuilderHint: {
+    fontSize: designSystem.typography.size.xs,
+    color: designSystem.colors.text.muted,
+    marginTop: designSystem.spacing.md,
+    textAlign: 'center',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: designSystem.spacing.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: designSystem.colors.border.default,
+  },
+  dividerText: {
+    fontSize: designSystem.typography.size.sm,
+    color: designSystem.colors.text.muted,
+    paddingHorizontal: designSystem.spacing.md,
+  },
+  form: {
+    marginBottom: designSystem.spacing.lg,
+  },
+  credentialsLabel: {
+    fontSize: designSystem.typography.size.sm,
+    color: designSystem.colors.text.secondary,
+    marginBottom: designSystem.spacing.sm,
+  },
+  helpCard: {
+    backgroundColor: designSystem.colors.background.secondary,
+    borderRadius: designSystem.layout.radius.xl,
+    padding: designSystem.spacing.lg,
+    marginTop: designSystem.spacing.xxl,
+  },
+  helpText: {
+    fontSize: designSystem.typography.size.sm,
+    color: designSystem.colors.text.secondary,
+    lineHeight: 20,
+  },
+  helpBold: {
+    fontWeight: '600',
+    color: designSystem.colors.text.primary,
+  },
+  submitButton: {
+    marginTop: designSystem.spacing.xxl,
+    marginBottom: designSystem.spacing.xxxl,
+  },
+});

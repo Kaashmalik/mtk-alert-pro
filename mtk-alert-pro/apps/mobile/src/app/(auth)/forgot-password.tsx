@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { View, Text, Alert } from 'react-native';
+import { View, Text, Alert, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Mail, ArrowLeft } from 'lucide-react-native';
-import { TouchableOpacity } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, Input } from '@/components/ui';
 import { supabase } from '@/lib/supabase/client';
+import { colors, spacing, fontSize, borderRadius } from '@/lib/theme';
 
 const schema = z.object({
   email: z.string().email('Invalid email address'),
@@ -51,21 +51,23 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-900 px-6">
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.bg.primary} />
+      
       {/* Back Button */}
       <TouchableOpacity
         onPress={() => router.back()}
-        className="flex-row items-center mt-4"
+        style={styles.backButton}
       >
-        <ArrowLeft size={24} color="white" />
-        <Text className="text-white ml-2">Back</Text>
+        <ArrowLeft size={24} color={colors.text.primary} />
+        <Text style={styles.backText}>Back</Text>
       </TouchableOpacity>
 
-      <View className="flex-1 justify-center">
-        <Text className="text-white text-2xl font-bold mb-2">
+      <View style={styles.content}>
+        <Text style={styles.title}>
           Forgot Password?
         </Text>
-        <Text className="text-slate-400 mb-8">
+        <Text style={styles.subtitle}>
           Enter your email and we'll send you a link to reset your password.
         </Text>
 
@@ -78,7 +80,7 @@ export default function ForgotPasswordScreen() {
               placeholder="Enter your email"
               keyboardType="email-address"
               autoCapitalize="none"
-              leftIcon={<Mail size={20} color="#64748B" />}
+              leftIcon={<Mail size={20} color={colors.text.muted} />}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
@@ -88,7 +90,7 @@ export default function ForgotPasswordScreen() {
         />
 
         <Button
-          className="mt-6"
+          style={styles.submitButton}
           onPress={handleSubmit(onSubmit)}
           loading={isLoading}
         >
@@ -98,3 +100,39 @@ export default function ForgotPasswordScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg.primary,
+    paddingHorizontal: spacing.xxl,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.lg,
+  },
+  backText: {
+    color: colors.text.primary,
+    marginLeft: spacing.sm,
+    fontSize: fontSize.base,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  title: {
+    color: colors.text.primary,
+    fontSize: fontSize['2xl'],
+    fontWeight: '700',
+    marginBottom: spacing.sm,
+  },
+  subtitle: {
+    color: colors.text.secondary,
+    fontSize: fontSize.base,
+    marginBottom: spacing.xxl,
+  },
+  submitButton: {
+    marginTop: spacing.xxl,
+  },
+});

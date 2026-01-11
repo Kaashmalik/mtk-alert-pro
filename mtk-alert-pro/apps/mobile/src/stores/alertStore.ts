@@ -1,5 +1,9 @@
 import { create } from 'zustand';
+import { Vibration } from 'react-native';
 import { supabase } from '@/lib/supabase/client';
+import { alarmService } from '@/lib/audio/alarmService';
+import { useSettingsStore } from './settingsStore';
+import { useCameraStore } from './cameraStore';
 import type { Alert } from '@/types';
 
 interface AlertState {
@@ -107,7 +111,7 @@ export const useAlertStore = create<AlertState>((set, get) => ({
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'alerts' },
-        (payload) => {
+        async (payload) => {
           const newAlert: Alert = {
             id: payload.new.id,
             cameraId: payload.new.camera_id,
@@ -121,10 +125,49 @@ export const useAlertStore = create<AlertState>((set, get) => ({
             createdAt: new Date(payload.new.created_at),
           };
 
+          // Update state
           set({
             alerts: [newAlert, ...get().alerts],
             unreadCount: get().unreadCount + 1,
           });
+
+          // Get settings and camera info
+          const settings = useSettingsStore.getState().notifications;
+          const cameras = useCameraStore.getState().cameras;
+          const camera = cameras.find(c => c.id === newAlert.cameraId);
+
+          // Check if this alert type should trigger alarm (person or vehicle only)
+          const isValidAlertType = newAlert.type === 'person' || newAlert.type === 'vehicle';
+          
+          // Check camera-level settings
+          const cameraAllowsAlarm = camera?.detectionSettings?.alarmEnabled ?? true;
+          const cameraAllowsNotification = camera?.detectionSettings?.notificationsEnabled ?? true;
+
+          // Check detection type matches camera settings
+          const detectionTypeEnabled = 
+            (newAlert.type === 'person' && camera?.detectionSettings?.person) ||
+            (newAlert.type === 'vehicle' && camera?.detectionSettings?.vehicle);
+
+          // Only trigger for valid detection types that are enabled
+          if (isValidAlertType && detectionTypeEnabled) {
+            // Play sound if enabled
+            if (settings.sound && cameraAllowsAlarm) {
+              try {
+                await alarmService.playAlarm(settings.alarmSound, {
+                  volume: settings.alarmVolume,
+                  repeat: settings.repeatAlarm,
+                  repeatCount: settings.repeatCount,
+                });
+              } catch (error) {
+                console.error('Failed to play alarm:', error);
+              }
+            }
+
+            // Vibrate if enabled
+            if (settings.vibration && cameraAllowsNotification) {
+              Vibration.vibrate([0, 500, 200, 500, 200, 500]);
+            }
+          }
         }
       )
       .subscribe();

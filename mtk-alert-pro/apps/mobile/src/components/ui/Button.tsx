@@ -8,7 +8,7 @@ import {
   TextStyle,
   type TouchableOpacityProps,
 } from 'react-native';
-import { colors, borderRadius } from '@/lib/theme';
+import { designSystem } from '@/theme/design-system';
 
 type ButtonVariant = 'default' | 'secondary' | 'outline' | 'ghost' | 'destructive';
 type ButtonSize = 'default' | 'sm' | 'lg' | 'icon';
@@ -25,7 +25,7 @@ const getButtonStyle = (variant: ButtonVariant, size: ButtonSize): ViewStyle => 
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: borderRadius.lg,
+    borderRadius: designSystem.layout.radius.lg,
   };
 
   // Size styles
@@ -38,15 +38,15 @@ const getButtonStyle = (variant: ButtonVariant, size: ButtonSize): ViewStyle => 
 
   // Variant styles
   const variantStyles: Record<ButtonVariant, ViewStyle> = {
-    default: { backgroundColor: colors.brand.red },
-    secondary: { backgroundColor: colors.bg.tertiary },
-    outline: { 
-      backgroundColor: 'transparent', 
-      borderWidth: 2, 
-      borderColor: colors.border.light 
+    default: { backgroundColor: designSystem.colors.primary[500] },
+    secondary: { backgroundColor: designSystem.colors.background.tertiary },
+    outline: {
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderColor: designSystem.colors.border.light
     },
     ghost: { backgroundColor: 'transparent' },
-    destructive: { backgroundColor: colors.status.error },
+    destructive: { backgroundColor: designSystem.colors.status.danger },
   };
 
   return { ...baseStyle, ...sizeStyles[size], ...variantStyles[variant] };
@@ -61,8 +61,9 @@ const getTextStyle = (size: ButtonSize): TextStyle => {
   };
 
   return {
-    color: colors.text.primary,
+    color: designSystem.colors.text.primary,
     fontWeight: '600',
+    fontFamily: designSystem.typography.fontFamily.medium,
     ...sizeStyles[size],
   };
 };

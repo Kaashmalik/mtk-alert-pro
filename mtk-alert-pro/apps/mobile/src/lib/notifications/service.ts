@@ -68,7 +68,29 @@ export async function savePushToken(userId: string, token: string) {
   }
 }
 
-export async function sendLocalNotification(alert: Alert, cameraName: string) {
+export async function sendLocalNotification(alert: Alert, cameraName: string): Promise<void>;
+export async function sendLocalNotification(options: { title: string; body: string; data?: Record<string, unknown> }): Promise<void>;
+export async function sendLocalNotification(
+  alertOrOptions: Alert | { title: string; body: string; data?: Record<string, unknown> },
+  cameraName?: string
+): Promise<void> {
+  // Handle simple notification object
+  if ('title' in alertOrOptions && 'body' in alertOrOptions) {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: alertOrOptions.title,
+        body: alertOrOptions.body,
+        data: alertOrOptions.data || {},
+        sound: 'default',
+        badge: 1,
+      },
+      trigger: null,
+    });
+    return;
+  }
+
+  // Handle Alert object with cameraName
+  const alert = alertOrOptions as Alert;
   await Notifications.scheduleNotificationAsync({
     content: {
       title: `🚨 ${alert.type.charAt(0).toUpperCase() + alert.type.slice(1)} Detected`,

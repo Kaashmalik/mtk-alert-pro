@@ -8,7 +8,7 @@ import {
   type TextInputProps,
 } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
-import { colors, borderRadius, spacing, fontSize } from '@/lib/theme';
+import { designSystem } from '@/theme/design-system';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -39,7 +39,7 @@ export const Input = forwardRef<TextInput, InputProps>(
           <TextInput
             ref={ref}
             style={[styles.input, style]}
-            placeholderTextColor={colors.text.tertiary}
+            placeholderTextColor={designSystem.colors.text.muted}
             secureTextEntry={isSecure}
             onFocus={(e) => {
               setIsFocused(true);
@@ -58,9 +58,9 @@ export const Input = forwardRef<TextInput, InputProps>(
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               {isSecure ? (
-                <Eye size={20} color={colors.text.tertiary} />
+                <Eye size={20} color={designSystem.colors.text.muted} />
               ) : (
-                <EyeOff size={20} color={colors.text.tertiary} />
+                <EyeOff size={20} color={designSystem.colors.text.muted} />
               )}
             </TouchableOpacity>
           )}
@@ -81,45 +81,47 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   label: {
-    marginBottom: spacing.sm,
-    fontSize: fontSize.sm,
+    marginBottom: designSystem.spacing.sm,
+    fontSize: designSystem.typography.size.sm,
     fontWeight: '500',
-    color: colors.text.secondary,
+    color: designSystem.colors.text.secondary,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.bg.secondary,
-    borderRadius: borderRadius.lg,
+    backgroundColor: designSystem.colors.background.secondary,
+    borderRadius: designSystem.layout.radius.lg,
     borderWidth: 1,
-    borderColor: colors.border.default,
-    paddingHorizontal: spacing.lg,
+    borderColor: designSystem.colors.border.default,
+    paddingHorizontal: designSystem.spacing.lg,
   },
   inputFocused: {
-    borderColor: colors.brand.red,
+    borderColor: designSystem.colors.primary[500],
+    ...designSystem.shadows.glow.primary,
   },
   inputError: {
-    borderColor: colors.status.error,
+    borderColor: designSystem.colors.status.danger,
   },
   inputDisabled: {
     opacity: 0.5,
   },
   leftIcon: {
-    marginRight: spacing.md,
+    marginRight: designSystem.spacing.md,
   },
   rightIcon: {
-    marginLeft: spacing.md,
+    marginLeft: designSystem.spacing.md,
   },
   input: {
     flex: 1,
     height: 56,
-    fontSize: fontSize.base,
-    color: colors.text.primary,
+    fontSize: designSystem.typography.size.base,
+    color: designSystem.colors.text.primary,
+    fontFamily: designSystem.typography.fontFamily.regular,
   },
   error: {
-    marginTop: spacing.xs,
-    fontSize: fontSize.sm,
-    color: colors.status.error,
+    marginTop: designSystem.spacing.xs,
+    fontSize: designSystem.typography.size.sm,
+    color: designSystem.colors.status.danger,
   },
 });
 

@@ -13,12 +13,13 @@ import {
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, Mail, Lock, User, ArrowLeft } from 'lucide-react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, Input } from '@/components/ui';
 import { useAuthStore } from '@/stores';
-import { colors, spacing, fontSize, borderRadius } from '@/lib/theme';
+import { designSystem } from '@/theme/design-system';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -33,8 +34,9 @@ const registerSchema = z.object({
 type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterScreen() {
-  const { signUpWithEmail, isLoading } = useAuthStore();
+  const signUpWithEmail = useAuthStore((state) => state.signUpWithEmail);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     control,
@@ -51,31 +53,60 @@ export default function RegisterScreen() {
   });
 
   const onSubmit = async (data: RegisterForm) => {
+    if (isSubmitting) return; // Prevent double submission
+
     setError(null);
+    setIsSubmitting(true);
+
     try {
       await signUpWithEmail(data.email, data.password, data.name);
+
+      // Show success and navigate to login
       Alert.alert(
-        'Success',
-        'Account created! Please check your email to verify.',
-        [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
+        'Account Created! 🎉',
+        'Please check your email to verify your account before signing in.',
+        [
+          {
+            text: 'Go to Login',
+            onPress: () => {
+              router.replace('/(auth)/login');
+            }
+          }
+        ],
+        { cancelable: false }
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Registration failed';
       setError(message);
-      Alert.alert('Error', message);
+
+      // Show specific error messages
+      if (message.includes('already registered')) {
+        Alert.alert(
+          'Account Exists',
+          'This email is already registered. Please sign in instead.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Sign In', onPress: () => router.replace('/(auth)/login') }
+          ]
+        );
+      } else {
+        Alert.alert('Registration Failed', message);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.bg.primary} />
-      
+      <StatusBar barStyle="light-content" backgroundColor={designSystem.colors.background.primary} />
+
       {/* Back Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.backButton}
         onPress={() => router.back()}
       >
-        <ArrowLeft size={24} color={colors.text.primary} />
+        <ArrowLeft size={24} color={designSystem.colors.text.primary} />
       </TouchableOpacity>
 
       <KeyboardAvoidingView
@@ -88,16 +119,22 @@ export default function RegisterScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Logo */}
-          <View style={styles.logoSection}>
+          <Animated.View
+            entering={FadeInDown.duration(600)}
+            style={styles.logoSection}
+          >
             <View style={styles.logoContainer}>
               <Shield size={36} color="white" />
             </View>
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>Join MTK AlertPro today</Text>
-          </View>
+          </Animated.View>
 
           {/* Form */}
-          <View style={styles.form}>
+          <Animated.View
+            entering={FadeInDown.delay(200).duration(600)}
+            style={styles.form}
+          >
             <Controller
               control={control}
               name="name"
@@ -106,7 +143,7 @@ export default function RegisterScreen() {
                   label="Full Name"
                   placeholder="Enter your name"
                   autoCapitalize="words"
-                  leftIcon={<User size={20} color={colors.text.tertiary} />}
+                  leftIcon={<User size={20} color={designSystem.colors.text.muted} />}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -126,7 +163,7 @@ export default function RegisterScreen() {
                   placeholder="Enter your email"
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  leftIcon={<Mail size={20} color={colors.text.tertiary} />}
+                  leftIcon={<Mail size={20} color={designSystem.colors.text.muted} />}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -145,7 +182,7 @@ export default function RegisterScreen() {
                   label="Password"
                   placeholder="Create a password"
                   secureTextEntry
-                  leftIcon={<Lock size={20} color={colors.text.tertiary} />}
+                  leftIcon={<Lock size={20} color={designSystem.colors.text.muted} />}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -164,7 +201,7 @@ export default function RegisterScreen() {
                   label="Confirm Password"
                   placeholder="Confirm your password"
                   secureTextEntry
-                  leftIcon={<Lock size={20} color={colors.text.tertiary} />}
+                  leftIcon={<Lock size={20} color={designSystem.colors.text.muted} />}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -172,18 +209,22 @@ export default function RegisterScreen() {
                 />
               )}
             />
-          </View>
+          </Animated.View>
 
           {error && (
-            <View style={styles.errorContainer}>
+            <Animated.View
+              entering={FadeInDown}
+              style={styles.errorContainer}
+            >
               <Text style={styles.errorText}>{error}</Text>
-            </View>
+            </Animated.View>
           )}
 
           <Button
             style={styles.submitButton}
             onPress={handleSubmit(onSubmit)}
-            loading={isLoading}
+            loading={isSubmitting}
+            disabled={isSubmitting}
           >
             Create Account
           </Button>
@@ -203,14 +244,14 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bg.primary,
+    backgroundColor: designSystem.colors.background.primary,
   },
   backButton: {
     position: 'absolute',
     top: 60,
-    left: spacing.lg,
+    left: designSystem.spacing.lg,
     zIndex: 10,
-    padding: spacing.sm,
+    padding: designSystem.spacing.sm,
   },
   keyboardView: {
     flex: 1,
@@ -218,69 +259,65 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: spacing.xxl,
-    paddingVertical: spacing.xxxl,
+    paddingHorizontal: designSystem.spacing.xxl,
+    paddingVertical: designSystem.spacing.xxxl,
   },
   logoSection: {
     alignItems: 'center',
-    marginBottom: spacing.xxl,
+    marginBottom: designSystem.spacing.xxl,
   },
   logoContainer: {
     width: 72,
     height: 72,
-    backgroundColor: colors.brand.red,
-    borderRadius: borderRadius.xl,
+    backgroundColor: designSystem.colors.primary[500],
+    borderRadius: designSystem.layout.radius.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.lg,
-    shadowColor: colors.brand.red,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 6,
+    marginBottom: designSystem.spacing.lg,
+    ...designSystem.shadows.glow.primary,
   },
   title: {
-    fontSize: fontSize['2xl'],
+    fontSize: designSystem.typography.size.xxl,
     fontWeight: '700',
-    color: colors.text.primary,
-    marginBottom: spacing.xs,
+    color: designSystem.colors.text.primary,
+    marginBottom: designSystem.spacing.xs,
   },
   subtitle: {
-    fontSize: fontSize.base,
-    color: colors.text.secondary,
+    fontSize: designSystem.typography.size.base,
+    color: designSystem.colors.text.secondary,
   },
   form: {
-    marginBottom: spacing.lg,
+    marginBottom: designSystem.spacing.lg,
   },
   inputSpacer: {
-    height: spacing.md,
+    height: designSystem.spacing.md,
   },
   errorContainer: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
+    borderRadius: designSystem.layout.radius.md,
+    padding: designSystem.spacing.md,
+    marginBottom: designSystem.spacing.lg,
   },
   errorText: {
-    fontSize: fontSize.sm,
-    color: colors.status.error,
+    fontSize: designSystem.typography.size.sm,
+    color: designSystem.colors.status.danger,
     textAlign: 'center',
   },
   submitButton: {
-    marginTop: spacing.md,
+    marginTop: designSystem.spacing.md,
   },
   signinContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: spacing.xxl,
+    marginTop: designSystem.spacing.xxl,
   },
   signinText: {
-    fontSize: fontSize.base,
-    color: colors.text.secondary,
+    fontSize: designSystem.typography.size.base,
+    color: designSystem.colors.text.secondary,
   },
   signinLink: {
-    fontSize: fontSize.base,
-    color: colors.brand.red,
+    fontSize: designSystem.typography.size.base,
+    color: designSystem.colors.primary[500],
     fontWeight: '600',
   },
 });

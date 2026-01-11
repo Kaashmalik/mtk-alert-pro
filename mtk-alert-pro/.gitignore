@@ -22,6 +22,10 @@ ios/
 .env
 .env.local
 .env.*.local
+apps/mobile/.env
+apps/mobile/.env.*
+apps/**/.env
+apps/**/.env.*
 
 # IDE
 .idea/

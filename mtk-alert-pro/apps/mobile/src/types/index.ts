@@ -23,10 +23,17 @@ export interface Camera {
 }
 
 export interface DetectionSettings {
+  // Detection types - only person and vehicle trigger alerts
   person: boolean;
   vehicle: boolean;
   face?: boolean;
+  // Sensitivity threshold (0.0 - 1.0)
+  // Higher = fewer false positives but may miss some detections
   sensitivity: number;
+  // Notification settings per camera
+  notificationsEnabled: boolean;
+  alarmEnabled: boolean;
+  // Detection zones
   zones?: DetectionZone[];
 }
 
@@ -43,6 +50,7 @@ export interface Alert {
   userId: string;
   type: 'person' | 'vehicle' | 'face' | 'motion';
   confidence: number;
+  thumbnailUrl?: string;
   snapshotUrl?: string;
   videoClipUrl?: string;
   metadata: Record<string, unknown>;
@@ -50,11 +58,20 @@ export interface Alert {
   createdAt: Date;
 }
 
+// Alarm sound types - each has a unique vibration pattern
+export type AlarmSoundType = 'urgent' | 'siren' | 'alert' | 'chime' | 'beep' | 'heavy';
+
 export interface AppSettings {
   notifications: {
     enabled: boolean;
+    push: boolean;
     sound: boolean;
     vibration: boolean;
+    // Sound settings
+    alarmSound: AlarmSoundType;
+    alarmVolume: number; // 0.0 to 1.0
+    repeatAlarm: boolean;
+    repeatCount: number; // -1 for infinite
   };
   detection: {
     redAlertMode: boolean;
@@ -63,6 +80,11 @@ export interface AppSettings {
   display: {
     theme: 'light' | 'dark' | 'system';
     streamQuality: '720p' | '1080p';
+  };
+  security: {
+    biometricEnabled: boolean;
+    autoLock: boolean;
+    autoLockTimeout: number; // in seconds
   };
 }
 

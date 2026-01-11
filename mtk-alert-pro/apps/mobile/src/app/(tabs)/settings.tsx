@@ -1,24 +1,45 @@
-import { View, Text, ScrollView, TouchableOpacity, Switch, Alert, StyleSheet, StatusBar } from 'react-native';
+import { useState } from 'react';
+import { View, Text, Switch, TouchableOpacity, ScrollView, Alert, StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
+  User,
   Bell,
   Shield,
-  Moon,
-  ChevronRight,
-  LogOut,
-  Crown,
   HelpCircle,
+  LogOut,
+  ChevronRight,
+  Moon,
+  Smartphone,
   Info,
+  CreditCard,
+  Lock,
+  Eye,
+  Zap,
+  Volume2,
 } from 'lucide-react-native';
-import { useAuthStore, useSettingsStore } from '@/stores';
-import { colors, spacing, fontSize, borderRadius } from '@/lib/theme';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useAuthStore, useSettingsStore, useSubscriptionStore, useIsPremium } from '@/stores';
+import { profileService } from '@/lib/profile/profileService';
+import { designSystem } from '@/theme/design-system';
 
 export default function SettingsScreen() {
-  const { user, signOut } = useAuthStore();
-  const { notifications, detection, display, setNotifications, setDisplay } = useSettingsStore();
+  const { signOut, user } = useAuthStore();
+  const {
+    theme,
+    notifications,
+    detection,
+    security,
+    setTheme,
+    setNotifications,
+    setDetection,
+    setSecurity
+  } = useSettingsStore();
+  const { currentTier } = useSubscriptionStore();
+  const isPremium = useIsPremium();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     Alert.alert(
       'Sign Out',
       'Are you sure you want to sign out?',
@@ -28,333 +49,362 @@ export default function SettingsScreen() {
           text: 'Sign Out',
           style: 'destructive',
           onPress: async () => {
-            await signOut();
-            router.replace('/(auth)/login');
-          },
+            setIsLoading(true);
+            try {
+              await signOut();
+              router.replace('/(auth)/login');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to sign out');
+            } finally {
+              setIsLoading(false);
+            }
+          }
         },
       ]
     );
   };
 
-  const SettingItem = ({
-    icon,
-    title,
-    subtitle,
-    onPress,
-    rightElement,
-    isLast = false,
-  }: {
-    icon: React.ReactNode;
-    title: string;
-    subtitle?: string;
-    onPress?: () => void;
-    rightElement?: React.ReactNode;
-    isLast?: boolean;
-  }) => (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={!onPress && !rightElement}
-      style={[styles.settingItem, !isLast && styles.settingItemBorder]}
-      activeOpacity={onPress ? 0.7 : 1}
-    >
-      <View style={styles.settingIcon}>{icon}</View>
-      <View style={styles.settingContent}>
-        <Text style={styles.settingTitle}>{title}</Text>
-        {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
+  const SettingSection = ({ title, children, delay }: { title: string; children: React.ReactNode, delay: number }) => (
+    <Animated.View entering={FadeInDown.delay(delay).duration(600)} style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.sectionContent}>
+        {children}
       </View>
-      {rightElement || (onPress && <ChevronRight size={20} color={colors.text.muted} />)}
+    </Animated.View>
+  );
+
+  const SettingItem = ({
+    icon: Icon,
+    color,
+    label,
+    value,
+    type = 'link',
+    onPress,
+    onToggle
+  }: any) => (
+    <TouchableOpacity
+      style={styles.settingItem}
+      onPress={type === 'link' ? onPress : undefined}
+      activeOpacity={type === 'link' ? 0.7 : 1}
+      disabled={type === 'toggle'}
+    >
+      <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
+        <Icon size={20} color={color} />
+      </View>
+      <Text style={styles.settingLabel}>{label}</Text>
+
+      {type === 'toggle' ? (
+        <Switch
+          value={value}
+          onValueChange={onToggle}
+          trackColor={{ false: designSystem.colors.background.tertiary, true: designSystem.colors.primary[500] }}
+          thumbColor={'white'}
+        />
+      ) : type === 'value' ? (
+        <Text style={styles.valueText}>{value}</Text>
+      ) : (
+        <ChevronRight size={20} color={designSystem.colors.text.muted} />
+      )}
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.bg.primary} />
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <Text style={styles.headerTitle}>Settings</Text>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={designSystem.colors.background.primary} />
 
-        {/* Profile Section */}
-        <View style={styles.profileCard}>
-          <View style={styles.profileAvatar}>
-            <Text style={styles.profileAvatarText}>
-              {user?.displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
-            </Text>
-          </View>
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{user?.displayName || 'User'}</Text>
-            <Text style={styles.profileEmail}>{user?.email}</Text>
-            <View style={styles.profilePlan}>
-              <Crown size={14} color={colors.status.warning} />
-              <Text style={styles.profilePlanText}>
-                {user?.subscriptionTier || 'Free'} Plan
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        {/* Header */}
+        <Animated.View entering={FadeInDown.duration(600)} style={styles.header}>
+          <Text style={styles.headerTitle}>Settings</Text>
+        </Animated.View>
+
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+
+          {/* Profile Section */}
+          <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.profileCard}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {user?.displayName?.charAt(0).toUpperCase() || 'U'}
               </Text>
             </View>
-          </View>
-        </View>
-
-        {/* Notifications */}
-        <Text style={styles.sectionTitle}>Notifications</Text>
-        <View style={styles.sectionCard}>
-          <SettingItem
-            icon={<Bell size={20} color="#06B6D4" />}
-            title="Push Notifications"
-            subtitle="Receive alert notifications"
-            rightElement={
-              <Switch
-                value={notifications.enabled}
-                onValueChange={(value) => setNotifications({ enabled: value })}
-                trackColor={{ false: colors.bg.tertiary, true: colors.brand.red }}
-                thumbColor="white"
-              />
-            }
-          />
-          <SettingItem
-            icon={<Bell size={20} color="#06B6D4" />}
-            title="Sound"
-            subtitle="Play sound for alerts"
-            isLast
-            rightElement={
-              <Switch
-                value={notifications.sound}
-                onValueChange={(value) => setNotifications({ sound: value })}
-                trackColor={{ false: colors.bg.tertiary, true: colors.brand.red }}
-                thumbColor="white"
-              />
-            }
-          />
-        </View>
-
-        {/* Display */}
-        <Text style={styles.sectionTitle}>Display</Text>
-        <View style={styles.sectionCard}>
-          <SettingItem
-            icon={<Moon size={20} color="#8B5CF6" />}
-            title="Dark Mode"
-            subtitle="Use dark theme"
-            isLast
-            rightElement={
-              <Switch
-                value={display.theme === 'dark'}
-                onValueChange={(value) =>
-                  setDisplay({ theme: value ? 'dark' : 'light' })
-                }
-                trackColor={{ false: colors.bg.tertiary, true: colors.brand.red }}
-                thumbColor="white"
-              />
-            }
-          />
-        </View>
-
-        {/* Security */}
-        <Text style={styles.sectionTitle}>Security</Text>
-        <View style={styles.sectionCard}>
-          <SettingItem
-            icon={<Shield size={20} color={colors.status.success} />}
-            title="Detection Sensitivity"
-            subtitle={`Cooldown: ${detection.cooldownSeconds}s`}
-            onPress={() => {}}
-            isLast
-          />
-        </View>
-
-        {/* Subscription */}
-        {user?.subscriptionTier === 'free' && (
-          <>
-            <Text style={styles.sectionTitle}>Subscription</Text>
-            <TouchableOpacity
-              style={styles.upgradeCard}
-              onPress={() => router.push('/subscription')}
-              activeOpacity={0.8}
-            >
-              <View style={styles.upgradeContent}>
-                <Crown size={24} color={colors.status.warning} />
-                <View style={styles.upgradeText}>
-                  <Text style={styles.upgradeTitle}>Upgrade to Pro</Text>
-                  <Text style={styles.upgradeSubtitle}>
-                    Unlimited cameras, face recognition & more
-                  </Text>
-                </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName}>{user?.displayName || 'User'}</Text>
+              <Text style={styles.profileEmail}>{user?.email}</Text>
+              <View style={[
+                styles.badge,
+                isPremium ? styles.badgePremium : styles.badgeFree
+              ]}>
+                <Text style={[
+                  styles.badgeText,
+                  isPremium ? styles.badgeTextPremium : styles.badgeTextFree
+                ]}>
+                  {isPremium ? 'PRO PLAN' : 'FREE PLAN'}
+                </Text>
               </View>
-              <ChevronRight size={20} color={colors.text.muted} />
+            </View>
+            <TouchableOpacity onPress={() => router.push('/profile/edit')}>
+              <ChevronRight size={20} color={designSystem.colors.text.secondary} />
             </TouchableOpacity>
-          </>
-        )}
+          </Animated.View>
 
-        {/* Support */}
-        <Text style={styles.sectionTitle}>Support & About</Text>
-        <View style={styles.sectionCard}>
-          <SettingItem
-            icon={<HelpCircle size={20} color={colors.status.warning} />}
-            title="Help Center"
-            onPress={() => {}}
-          />
-          <SettingItem
-            icon={<Info size={20} color={colors.text.muted} />}
-            title="About MTK AlertPro"
-            subtitle="Version 1.0.0 • Developed by Malik Kashif"
-            isLast
-          />
-        </View>
+          {/* App Settings */}
+          <SettingSection title="App Settings" delay={200}>
+            <SettingItem
+              icon={Moon}
+              color={designSystem.colors.primary[500]}
+              label="Dark Mode"
+              type="toggle"
+              value={theme === 'dark'}
+              onToggle={(v: boolean) => setTheme(v ? 'dark' : 'light')}
+            />
+            <SettingItem
+              icon={Bell}
+              color={designSystem.colors.status.warning}
+              label="Push Notifications"
+              type="toggle"
+              value={notifications.push}
+              onToggle={(v: boolean) => setNotifications({ ...notifications, push: v })}
+            />
+            <SettingItem
+              icon={Volume2}
+              color={'#EC4899'}
+              label="Alarm Sounds"
+              type="link"
+              onPress={() => router.push('/settings/alarm-sounds')}
+            />
+            <SettingItem
+              icon={Zap}
+              color={designSystem.colors.status.danger}
+              label="Red Alert Mode"
+              type="toggle"
+              value={detection.redAlertMode}
+              onToggle={(v: boolean) => setDetection({ redAlertMode: v })}
+            />
+          </SettingSection>
 
-        {/* Sign Out */}
-        <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton} activeOpacity={0.8}>
-          <LogOut size={20} color={colors.brand.red} />
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+          {/* Subscription */}
+          <SettingSection title="Subscription" delay={300}>
+            <SettingItem
+              icon={CreditCard}
+              color={'#8B5CF6'}
+              label="Manage Plan"
+              type="link"
+              onPress={() => router.push('/subscription')}
+            />
+            <SettingItem
+              icon={Shield}
+              color={'#10B981'}
+              label="Restore Purchases"
+              type="link"
+              onPress={async () => {
+                Alert.alert('Restoring...', 'Looking for your purchases...');
+                const result = await profileService.restorePurchases();
+                if (result.restored) {
+                  Alert.alert('Success!', `Your ${result.tier?.toUpperCase()} subscription has been restored.`);
+                } else {
+                  Alert.alert('No Purchases', 'No previous purchases found.');
+                }
+              }}
+            />
+          </SettingSection>
+
+          {/* Account & Security */}
+          <SettingSection title="Account & Security" delay={400}>
+            <SettingItem
+              icon={User}
+              color={'#3B82F6'}
+              label="Edit Profile"
+              onPress={() => router.push('/profile/edit')}
+            />
+            <SettingItem
+              icon={Lock}
+              color={'#F59E0B'}
+              label="Change Password"
+              onPress={() => router.push('/profile/change-password')}
+            />
+            <SettingItem
+              icon={Smartphone}
+              color={'#EC4899'}
+              label="Biometric Login"
+              type="toggle"
+              value={security?.biometricEnabled ?? false}
+              onToggle={(v: boolean) => setSecurity?.({ biometricEnabled: v })}
+            />
+          </SettingSection>
+
+          {/* Support */}
+          <SettingSection title="Support" delay={500}>
+            <SettingItem
+              icon={HelpCircle}
+              color={'#6366F1'}
+              label="Help Center"
+              onPress={() => router.push('/help')}
+            />
+            <SettingItem
+              icon={Info}
+              color={'#64748B'}
+              label="About"
+              type="value"
+              value="v1.0.0"
+            />
+          </SettingSection>
+
+          {/* Sign Out */}
+          <Animated.View entering={FadeInDown.delay(600).duration(600)} style={styles.logoutContainer}>
+            <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
+              <LogOut size={20} color={designSystem.colors.status.danger} />
+              <Text style={styles.logoutText}>Sign Out</Text>
+            </TouchableOpacity>
+            <Text style={styles.versionText}>MTK AlertPro v1.0.0 (Build 102)</Text>
+          </Animated.View>
+
+          <View style={{ height: designSystem.spacing.xxxl }} />
+
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bg.primary,
+    backgroundColor: designSystem.colors.background.primary,
   },
-  scrollView: {
+  safeArea: {
     flex: 1,
-    paddingHorizontal: spacing.xxl,
+  },
+  header: {
+    paddingHorizontal: designSystem.spacing.xxl,
+    paddingTop: designSystem.spacing.lg,
+    paddingBottom: designSystem.spacing.lg,
   },
   headerTitle: {
-    fontSize: fontSize['2xl'],
+    fontSize: designSystem.typography.size.xxl,
     fontWeight: '700',
-    color: colors.text.primary,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xxl,
+    color: designSystem.colors.text.primary,
+  },
+  content: {
+    paddingHorizontal: designSystem.spacing.xxl,
   },
   profileCard: {
-    backgroundColor: colors.bg.secondary,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.xxl,
+    backgroundColor: designSystem.colors.background.secondary,
+    padding: designSystem.spacing.lg,
+    borderRadius: designSystem.layout.radius.xl,
+    marginBottom: designSystem.spacing.xl,
   },
-  profileAvatar: {
+  avatar: {
     width: 64,
     height: 64,
-    backgroundColor: colors.brand.red,
     borderRadius: 32,
+    backgroundColor: designSystem.colors.primary[500],
     alignItems: 'center',
     justifyContent: 'center',
   },
-  profileAvatarText: {
-    fontSize: fontSize['2xl'],
+  avatarText: {
+    fontSize: designSystem.typography.size.xl,
     fontWeight: '700',
-    color: colors.text.primary,
+    color: 'white',
   },
   profileInfo: {
-    marginLeft: spacing.lg,
     flex: 1,
+    marginLeft: designSystem.spacing.md,
   },
   profileName: {
-    fontSize: fontSize.lg,
+    fontSize: designSystem.typography.size.lg,
     fontWeight: '600',
-    color: colors.text.primary,
+    color: designSystem.colors.text.primary,
   },
   profileEmail: {
-    fontSize: fontSize.sm,
-    color: colors.text.secondary,
-    marginTop: 2,
+    fontSize: designSystem.typography.size.sm,
+    color: designSystem.colors.text.secondary,
+    marginBottom: designSystem.spacing.xs,
   },
-  profilePlan: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.xs,
+  badge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: designSystem.spacing.sm,
+    paddingVertical: 2,
+    borderRadius: designSystem.layout.radius.sm,
   },
-  profilePlanText: {
-    fontSize: fontSize.sm,
-    color: colors.status.warning,
-    marginLeft: spacing.xs,
-    textTransform: 'capitalize',
+  badgePremium: {
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+  },
+  badgeFree: {
+    backgroundColor: designSystem.colors.background.tertiary,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  badgeTextPremium: {
+    color: designSystem.colors.status.warning,
+  },
+  badgeTextFree: {
+    color: designSystem.colors.text.muted,
+  },
+  section: {
+    marginBottom: designSystem.spacing.xl,
   },
   sectionTitle: {
-    fontSize: fontSize.sm,
-    fontWeight: '500',
-    color: colors.text.secondary,
+    fontSize: designSystem.typography.size.sm,
+    fontWeight: '600',
+    color: designSystem.colors.text.secondary,
+    marginBottom: designSystem.spacing.md,
+    marginLeft: designSystem.spacing.xs,
     textTransform: 'uppercase',
-    marginBottom: spacing.sm,
     letterSpacing: 0.5,
   },
-  sectionCard: {
-    backgroundColor: colors.bg.secondary,
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.xxl,
+  sectionContent: {
+    backgroundColor: designSystem.colors.background.secondary,
+    borderRadius: designSystem.layout.radius.xl,
+    overflow: 'hidden',
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.lg,
-  },
-  settingItemBorder: {
+    padding: designSystem.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border.default,
+    borderBottomColor: designSystem.colors.border.default,
   },
-  settingIcon: {
-    width: 40,
-    height: 40,
-    backgroundColor: colors.bg.tertiary,
-    borderRadius: 20,
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: designSystem.spacing.md,
   },
-  settingContent: {
+  settingLabel: {
     flex: 1,
-    marginLeft: spacing.md,
+    fontSize: designSystem.typography.size.base,
+    color: designSystem.colors.text.primary,
   },
-  settingTitle: {
-    fontSize: fontSize.base,
-    fontWeight: '500',
-    color: colors.text.primary,
+  valueText: {
+    fontSize: designSystem.typography.size.sm,
+    color: designSystem.colors.text.muted,
   },
-  settingSubtitle: {
-    fontSize: fontSize.sm,
-    color: colors.text.secondary,
-    marginTop: 2,
+  logoutContainer: {
+    marginTop: designSystem.spacing.lg,
+    alignItems: 'center',
   },
-  upgradeCard: {
-    backgroundColor: colors.bg.secondary,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
+  logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.xxl,
-    borderWidth: 2,
-    borderColor: colors.status.warning,
-  },
-  upgradeContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  upgradeText: {
-    marginLeft: spacing.md,
-    flex: 1,
-  },
-  upgradeTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.text.primary,
-  },
-  upgradeSubtitle: {
-    fontSize: fontSize.sm,
-    color: colors.text.secondary,
-    marginTop: 2,
-  },
-  signOutButton: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xxxl,
+    paddingHorizontal: designSystem.spacing.xl,
+    paddingVertical: designSystem.spacing.md,
+    borderRadius: designSystem.layout.radius.full,
+    marginBottom: designSystem.spacing.lg,
   },
-  signOutText: {
-    fontSize: fontSize.base,
+  logoutText: {
+    color: designSystem.colors.status.danger,
     fontWeight: '600',
-    color: colors.brand.red,
-    marginLeft: spacing.sm,
+    marginLeft: designSystem.spacing.sm,
+  },
+  versionText: {
+    fontSize: designSystem.typography.size.xs,
+    color: designSystem.colors.text.muted,
   },
 });
