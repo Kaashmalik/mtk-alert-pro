@@ -41,6 +41,11 @@ if (!isConfigValid) {
       'CRITICAL: Supabase configuration not properly set. Check EAS environment variables.',
     );
   }
+
+  // In development, throw error immediately - no mock client allowed
+  throw new Error(
+    'Supabase configuration missing. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in .env or EAS secrets.',
+  );
 } else {
   // Never log actual API keys - only masked version for debugging
   const maskedKey = supabaseAnonKey.slice(0, 10) + '...[MASKED]';
@@ -127,41 +132,31 @@ const secureStorage = {
 
 let supabase: SupabaseClient;
 
-if (isConfigValid) {
-  supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      storage: secureStorage,
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: false,
-    },
-    global: {
-      headers: {
-        'X-App-Version': Constants.expoConfig?.version || '1.0.0',
-        'X-Platform': Platform.OS,
-        'X-Security': 'hardened',
-      },
-    },
-    db: {
-      schema: 'public',
-    },
-  });
-} else {
-  // Create a mock client for development without valid config
-  console.warn('⚠️ Creating mock Supabase client - some features will not work');
-  supabase = createClient<Database>(
-    'https://placeholder.supabase.co',
-    'placeholder-key',
-    {
-      auth: {
-        storage: secureStorage,
-        autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false,
-      },
-    },
+// CRITICAL: No mock client allowed - fail fast if config is invalid
+if (!isConfigValid) {
+  throw new Error(
+    'CRITICAL: Supabase configuration not properly set. Check EAS environment variables.',
   );
 }
+
+supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: secureStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+  global: {
+    headers: {
+      'X-App-Version': Constants.expoConfig?.version || '1.0.0',
+      'X-Platform': Platform.OS,
+      'X-Security': 'hardened',
+    },
+  },
+  db: {
+    schema: 'public',
+  },
+});
 
 // ============================================================================
 // 🔒 SECURITY: Certificate Pinning (Production Only)

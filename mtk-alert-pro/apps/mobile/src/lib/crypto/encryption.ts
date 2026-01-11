@@ -10,18 +10,24 @@ import CryptoJS from 'crypto-js';
 // Encryption key from environment - MUST be set in production
 const ENCRYPTION_KEY = process.env.EXPO_PUBLIC_ENCRYPTION_KEY || '';
 
-// Validate encryption key on module load
+// CRITICAL: Validate encryption key on module load - fail fast if missing
 if (!ENCRYPTION_KEY) {
   if (__DEV__) {
-    console.warn(
-      '[Encryption] EXPO_PUBLIC_ENCRYPTION_KEY is not set. ' +
-      'Using temporary development key. All encrypted data will be invalid after restart. ' +
-      'This MUST be set in production!'
+    console.error(
+      '[Encryption] CRITICAL: EXPO_PUBLIC_ENCRYPTION_KEY is not set. ' +
+      'Application cannot start without encryption key. ' +
+      'Set in .env for development or EAS secrets for production.'
+    );
+    throw new Error(
+      'Encryption key not configured. Set EXPO_PUBLIC_ENCRYPTION_KEY environment variable.'
     );
   } else {
     console.error(
       '[Encryption] CRITICAL: EXPO_PUBLIC_ENCRYPTION_KEY is not set in production! ' +
       'Camera passwords cannot be encrypted securely.'
+    );
+    throw new Error(
+      'CRITICAL: Encryption key not configured in production. Application cannot start safely.'
     );
   }
 }
@@ -52,29 +58,19 @@ function validateEncryptionKey(key: string): boolean {
   return true;
 }
 
-// Secure encryption key retrieval
+// Secure encryption key retrieval - NO FALLBACKS ALLOWED
 const getEncryptionKey = (): string => {
   if (ENCRYPTION_KEY && validateEncryptionKey(ENCRYPTION_KEY)) {
     return ENCRYPTION_KEY;
   }
 
-  // CRITICAL: NEVER use fallback in production
-  if (!__DEV__) {
-    throw new Error(
-      'CRITICAL SECURITY ERROR: Invalid or missing encryption key. ' +
-      'Key must be at least 32 characters with high complexity. ' +
-      'Camera passwords cannot be encrypted. Application cannot start safely.'
-    );
-  }
-
-  // Development fallback - use temporary random key
-  // This prevents sharing the same key across development environments
-  const devKey = 'dev-temp-key-' + Date.now() + '-' + Math.random().toString(36).substring(2);
-  console.warn(
-    '[Encryption] Using temporary development key:', devKey.substring(0, 20) + '...',
-    'All encrypted data will be invalid after app restart.'
+  // CRITICAL: NEVER use fallback in production or development
+  // Application must fail fast without proper configuration
+  throw new Error(
+    'CRITICAL SECURITY ERROR: Invalid or missing encryption key. ' +
+    'Key must be at least 32 characters with high complexity. ' +
+    'Camera passwords cannot be encrypted. Application cannot start safely.'
   );
-  return devKey;
 };
 
 /**

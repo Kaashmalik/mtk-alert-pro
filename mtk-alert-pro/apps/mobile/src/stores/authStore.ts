@@ -264,14 +264,30 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setupTokenRefresh: () => {
+        let refreshFailureCount = 0;
+        const MAX_REFRESH_FAILURES = 3;
+
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            console.log('[AuthStore] Auth state changed:', event);
+            console.log('[AuthStore] Auth state changed:', event, 'has session:', !!session);
 
             if (event === 'TOKEN_REFRESHED') {
-              console.log('[AuthStore] Token refreshed successfully');
               if (session?.user) {
+                console.log('[AuthStore] Token refreshed successfully');
+                refreshFailureCount = 0; // Reset failure count on success
                 await get().refreshUser();
+              } else {
+                // Token refresh failed - no session after refresh event
+                console.error('[AuthStore] Token refresh failed - no session');
+                refreshFailureCount++;
+
+                if (refreshFailureCount >= MAX_REFRESH_FAILURES) {
+                  console.error('[AuthStore] Max refresh failures reached - forcing logout');
+                  await get().signOut();
+                  set({
+                    error: 'Session expired. Please sign in again.'
+                  });
+                }
               }
             } else if (event === 'SIGNED_OUT') {
               console.log('[AuthStore] User signed out');
@@ -281,8 +297,11 @@ export const useAuthStore = create<AuthState>()(
                 isLoading: false,
                 error: null
               });
+              refreshFailureCount = 0;
             } else if (event === 'USER_UPDATED') {
               console.log('[AuthStore] User updated');
+              refreshFailureCount = 0;
+
               if (session?.user) {
                 await get().refreshUser();
               }
